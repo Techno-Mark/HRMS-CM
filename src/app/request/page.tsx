@@ -548,7 +548,7 @@ export default function Home() {
     };
 
     callAPIwithParams(
-      "/Document/GetDocuments",
+      "/Document/GetUserDocuments",
       "post",
       callBack,
       {},
