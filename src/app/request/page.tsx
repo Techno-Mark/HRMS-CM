@@ -33,9 +33,9 @@ import { transformedDataProps, UserDataType } from "@/types/Request";
 import ValidateModel from "@/components/request/ValidateModel";
 
 export default function Home() {
-  const router = useRouter();
-  const getToken = useSearchParams();
-  const tokenData = getToken.get("id");
+  // const router = useRouter();
+  // const getToken = useSearchParams();
+  // const tokenData = getToken.get("id");
   const [loaded, setLoaded] = useState<boolean>(true);
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -66,30 +66,30 @@ export default function Home() {
     }
   }, []);
 
-  const GetPlanName = async () => {
-    const callBack = async (
-      status: boolean,
-      message: string,
-      data: {
-        planName: string;
-        planEngageMasterId: string;
-      }[]
-    ) => {
-      if (status) {
-        setPlanSponserName(data[0].planName);
-      } else {
-        toast.error(message);
-      }
-    };
+  // const GetPlanName = async () => {
+  //   const callBack = async (
+  //     status: boolean,
+  //     message: string,
+  //     data: {
+  //       planName: string;
+  //       planEngageMasterId: string;
+  //     }[]
+  //   ) => {
+  //     if (status) {
+  //       setPlanSponserName(data[0].planName);
+  //     } else {
+  //       toast.error(message);
+  //     }
+  //   };
 
-    callAPIwithParams(
-      "/Plan/GetPlanNamesOnly",
-      "get",
-      callBack,
-      {},
-      { name: "Token", value: tokenData!.toString() }
-    );
-  };
+  //   callAPIwithParams(
+  //     "/Plan/GetPlanNamesOnly",
+  //     "get",
+  //     callBack,
+  //     {},
+  //     { name: "Token", value: tokenData!.toString() }
+  //   );
+  // };
 
   useEffect(() => {
     if (isUploading) {
