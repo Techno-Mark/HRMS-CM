@@ -120,6 +120,8 @@ const Page = () => {
     }
   }, []);
 
+  
+
   if (loading)
     return (
       <Loader
