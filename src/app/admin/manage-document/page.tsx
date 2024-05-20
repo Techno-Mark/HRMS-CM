@@ -26,7 +26,9 @@ const Page = () => {
     isMandatory: false,
   });
 
-  const addupdateForm = () => {
+  const addupdateForm = (e: any) => {
+    e.preventDefault();
+    
     const callBack = async (status: boolean, message: string, data: any) => {
       if (status) {
         toast.success(message);
@@ -204,7 +206,7 @@ const Page = () => {
         formData={formData}
         isDialogOpen={isDialogOpen}
         setFormData={setFormData}
-        handleSubmit={addupdateForm}
+        handleSubmit={(e: any) => addupdateForm(e)}
         handleClose={handleDialogClose}
       />
     </Wrapper>
