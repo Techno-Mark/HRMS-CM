@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "HRMS - DMS",
@@ -16,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <Suspense>{children}</Suspense>
         <ToastContainer
           position="top-right"
           autoClose={5000}
