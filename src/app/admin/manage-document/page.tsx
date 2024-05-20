@@ -20,7 +20,7 @@ const Page = () => {
   const [data, setData] = useState([]);
   const [moreActionsClickedRowId, setmoreActionsClickedRowId] = useState(-1);
   const [formData, setFormData] = useState({
-    documentId: 0,
+    documentId: null,
     documentName: "",
     isActive: false,
     isMandatory: false,
@@ -28,7 +28,7 @@ const Page = () => {
 
   const addupdateForm = (e: any) => {
     e.preventDefault();
-    
+
     const callBack = async (status: boolean, message: string, data: any) => {
       if (status) {
         toast.success(message);
@@ -49,7 +49,7 @@ const Page = () => {
     setmoreActionsClickedRowId(-1);
     setDialogOpen(false);
     setFormData({
-      documentId: 0,
+      documentId: null,
       documentName: "",
       isActive: false,
       isMandatory: false,
