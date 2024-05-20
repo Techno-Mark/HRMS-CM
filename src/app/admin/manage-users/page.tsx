@@ -232,7 +232,7 @@ const Page = () => {
       {!loaded && <Loader />}
       <Wrapper>
         <div className="flex-row flex flex-wrap pb-2 justify-between w-full">
-          <div className="mx-5 justify-between flex flex-wrap w-full">
+          <div className="justify-between flex flex-wrap w-full">
             <div className="justify-start flex items-center font-semibold">
               Manage Users
             </div>

@@ -53,8 +53,8 @@ export const sidebarItems = [
     isOpen: true,
     subModule: [
       {
-        module: "Manage Form",
-        link: "/admin/manage-form",
+        module: "Manage Document",
+        link: "/admin/manage-document",
         icon: <></>,
       },
     ],

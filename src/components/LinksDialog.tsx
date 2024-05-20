@@ -14,10 +14,9 @@ import LinkIcon from "@mui/icons-material/Link";
 import CloseIcon from "@mui/icons-material/Close";
 import { toastOptions } from "@/static/toastOptions";
 import { toast } from "react-toastify";
-import { LinksDialogProps, LinksType } from "@/types/LinksDialog";
+import { LinksDialogProps } from "@/types/LinksDialog";
 
 const LinksDialog = ({ links, handleClose }: LinksDialogProps) => {
-  const url = new URL("http://localhost:3000/");
   return (
     <Dialog
       open={links.length > 0}
@@ -39,15 +38,15 @@ const LinksDialog = ({ links, handleClose }: LinksDialogProps) => {
         <DialogContentText id="alert-dialog-description" className="w-full">
           <div className="flex !flex-col">
             {links.map((link: any) => {
-              // url.pathname = "/request";
-              // url.searchParams.set("id", link.guid);
               return (
                 <span className="flex !items-center !justify-center" key={link}>
                   <Button
                     variant="contained"
                     className="flex !items-center !justify-center !rounded-r-sm !my-2 !h-[36px] !w-[75%] !bg-[#223E99] !text-[10px]"
                     onClick={async () => {
-                      navigator.clipboard.writeText(link);
+                      navigator.clipboard.writeText(
+                        `${process.env.app_url}/request?id=${link}`
+                      );
                       toast.success(
                         `Validate Code copied sucessfully`,
                         toastOptions

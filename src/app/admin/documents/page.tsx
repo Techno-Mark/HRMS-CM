@@ -1,11 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
-// import { LicenseInfo } from "@mui/x-license-pro";
-// import { DataGridPro } from "@mui/x-data-grid-pro";
-
-import { DataGrid, GridColDef, GridToolbarContainer } from "@mui/x-data-grid";
-import { Box, Portal, TextField, TablePagination } from "@mui/material";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { TextField } from "@mui/material";
 import { toast } from "react-toastify";
 import Wrapper from "@/components/Wrapper";
 import Loader from "@/components/common/Loader";
@@ -17,14 +14,12 @@ import { callAPIwithHeaders } from "@/api/commonAPI";
 import Close from "@/assets/icons/Close";
 import {
   BreadCrumbListProps,
-  CustomGridToolbarProps,
   DocumentProps,
   InitialBodyProps,
 } from "@/types/Documents";
 import { downloadFileFromBase64 } from "@/utils/downloadFileFromBase64";
 
 function Page() {
-  const router = useRouter();
   const [loaded, setLoaded] = useState<boolean>(false);
   const [pageNo, setPageNo] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
@@ -148,44 +143,9 @@ function Page() {
             );
           },
         },
-    // documentData.filter((data) => data.type === 0).length > 0
-    //   ? {
-    //       field: "",
-    //       width: 30,
-    //     }
-    //   : {
-    //       field: "uploadedBy",
-    //       headerName: "Uploaded By",
-    //       width: 230,
-    //       sortable: false,
-    //       renderHeader: (params) => (
-    //         <span className="capitalize font-semibold text-sm text-[#535255]">
-    //           Uploaded By
-    //         </span>
-    //       ),
-    //       renderCell: (params) => {
-    //         return (
-    //           <span className="text-sm font-normal text-[#333]">
-    //             {
-    //               params.value === null
-    //                 ? "-"
-    //                 : // (
-    //                   // <a
-    //                   //   className="text-[#223E99] no-underline"
-    //                   //   href={`mailto:${params.value}`}
-    //                   // >
-    //                   params.value
-    //               // </a>
-    //               // )
-    //             }
-    //           </span>
-    //         );
-    //       },
-    //     },
   ];
 
   const getDocuments = async (initialBody: InitialBodyProps) => {
-    // setLoaded(false);
     if (initialBody.folderName !== null && initialBody.type === 0) {
       if (
         !(
@@ -215,15 +175,6 @@ function Page() {
         }
         setTotalCount(data.totalCount);
         setLoaded(true);
-        // } else {
-        //   const url = await new URL(data.toString()).href;
-        //   const a = document.createElement("a");
-        //   a.href = url;
-        //   a.download = String(initialBody.folderName) ?? "document";
-        //   document.body.appendChild(a);
-        //   a.click();
-        //   setLoaded(true);
-        // }
       } else if (status && !data.data) {
         downloadFileFromBase64(
           data,

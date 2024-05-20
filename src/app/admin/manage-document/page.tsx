@@ -168,9 +168,9 @@ const Page = () => {
   return (
     <Wrapper>
       <div className="flex-row flex flex-wrap pb-2 justify-between w-full">
-        <div className="mx-5 justify-between flex flex-wrap w-full">
+        <div className="justify-between flex flex-wrap w-full">
           <div className="justify-start flex items-center font-semibold">
-            Manage Forms
+            Manage Document
           </div>
 
           <Button
@@ -178,7 +178,7 @@ const Page = () => {
             variant="contained"
             onClick={() => setDialogOpen(true)}
           >
-            Add Form <Add className="text-sm" />
+            Add document <Add className="text-sm" />
           </Button>
         </div>
       </div>

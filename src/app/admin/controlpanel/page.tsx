@@ -1,38 +1,58 @@
 "use client";
-import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
-import Wrapper from "@/components/Wrapper";
-import { downloadFileFromBase64 } from "@/utils/downloadFileFromBase64";
-import { Download, MoreVert } from "@mui/icons-material";
-import { Autocomplete, TextField } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import Wrapper from "@/components/Wrapper";
+import React, { useEffect, useState } from "react";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Autocomplete, TextField } from "@mui/material";
+import { Download, MoreVert } from "@mui/icons-material";
+import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
+import { downloadFileFromBase64 } from "@/utils/downloadFileFromBase64";
 
 const Page = () => {
   const [loaded, setLoaded] = useState<boolean>(false);
   const [data, setData] = useState([]);
   const [userData, setUserData] = useState([]);
   const [userName, setUserName] = useState(null);
+  const [isDefault, setIsDefault] = useState<boolean>(true);
   const [moreActionsClickedRowId, setmoreActionsClickedRowId] = useState(-1);
 
   const getData = (userId: string) => {
     setLoaded(false);
-    const callBack = async (status: boolean, message: string, data: any) => {
-      if (status) {
-        setLoaded(true);
-        setData(data);
-      } else {
-        setLoaded(true);
-      }
-    };
 
-    callAPIwithParams(
-      "/Document/GetUserDocuments",
-      "post",
-      callBack,
-      {},
-      { name: "UserId", value: userId }
-    );
+    if (userId.length === 0) {
+      setIsDefault(true);
+      const callBack = (status: boolean, message: string, data: any) => {
+        if (status) {
+          setData(data);
+        }
+      };
+
+      callAPIwithParams(
+        "/Document/GetDocuments",
+        "post",
+        callBack,
+        {},
+        { name: "DocumentId", value: "" }
+      );
+    } else {
+      setIsDefault(false);
+      const callBack = async (status: boolean, message: string, data: any) => {
+        if (status) {
+          setLoaded(true);
+          setData(data);
+        } else {
+          setLoaded(true);
+        }
+      };
+
+      callAPIwithParams(
+        "/Document/GetUserDocuments",
+        "post",
+        callBack,
+        {},
+        { name: "UserId", value: userId }
+      );
+    }
   };
 
   const getUserData = () => {
@@ -107,7 +127,13 @@ const Page = () => {
         </span>
       ),
       renderCell: (params) => {
-        return <div>{params.row.firstName + " " + params.row.lastName}</div>;
+        return (
+          <div>
+            {!params.row.firstName || !params.row.lastName
+              ? "-"
+              : params.row.firstName + " " + params.row.lastName}
+          </div>
+        );
       },
     },
     {
@@ -130,7 +156,7 @@ const Page = () => {
         </span>
       ),
       renderCell: (params) => {
-        return <div>{params.row.status}</div>;
+        return <div>{!params.row.status ? "-" : params.row.status}</div>;
       },
     },
     {
@@ -144,7 +170,14 @@ const Page = () => {
       ),
       renderCell: (params) => {
         return (
-          <div onClick={() => handleDownload(params.value)}>
+          <div
+            className={`${
+              !params.value
+                ? "pointer-events-none opacity-50"
+                : "cursor-pointer"
+            }`}
+            onClick={() => handleDownload(params.value)}
+          >
             <Download />
           </div>
         );
@@ -160,7 +193,11 @@ const Page = () => {
         </span>
       ),
       renderCell: (params) => {
-        return <div>{params.row.updatedOn.split("T")[0]}</div>;
+        return (
+          <div>
+            {!params.row.updatedOn ? "-" : params.row.updatedOn.split("T")[0]}
+          </div>
+        );
       },
     },
     {
@@ -172,6 +209,9 @@ const Page = () => {
           File Name
         </span>
       ),
+      renderCell: (params) => {
+        return <div>{!params.value ? "-" : params.value}</div>;
+      },
     },
     {
       field: "userId",
@@ -227,11 +267,7 @@ const Page = () => {
 
   return (
     <Wrapper>
-      <div className="mx-5 justify-between flex flex-wrap w-full">
-        {/* <div className="justify-start flex items-center font-semibold">
-          Control Panel
-        </div> */}
-      </div>
+      <div className="mx-5 justify-between flex flex-wrap w-full"></div>
       <div className="my-2">
         <Autocomplete
           className="w-[30%]"
@@ -260,23 +296,11 @@ const Page = () => {
                 outline: "none !important",
               },
             }}
-            getRowId={(row) => row.documentUserId}
+            getRowId={
+              isDefault ? (row) => row.documentId : (row) => row.documentUserId
+            }
             rows={data}
             columns={columns}
-            //   slots={{
-            //     footer: () => (
-            //       <div className="flex justify-end">
-            //         <TablePagination
-            //           rowsPerPage={10}
-            //           onPageChange={() => {}}
-            //           onRowsPerPageChange={() => {}}
-            //           count={0}
-            //           page={0}
-            //           rowsPerPageOptions={[5, 10, 15]}
-            //         />
-            //       </div>
-            //     ),
-            //   }}
           />
         </div>
       </div>
@@ -291,30 +315,6 @@ const MoreActions = ({ onAccept, onReject }: any) => {
   const actionStyle =
     "flex capitalize text-sm px-6 py-1 cursor-pointer hover:bg-slate-100";
 
-  // const updateStatus = async (status: number | null) => {
-  //   onClose();
-  //   const callBack = (status: boolean, message: string) => {
-  //     if (status) {
-  //       onStatusChange();
-  //       toast.success(message);
-  //     } else {
-  //       toast.error(message);
-  //     }
-  //   };
-
-  //   callAPIwithHeaders("/ControlPanel/UpdateStatus", "post", callBack, {
-  //     reportId: reportId,
-  //     tpaCompanyMasterId: tpaCompanyMasterId,
-  //     planEnagagementId: planEngagementId,
-  //     reportGroupId: activeGroup,
-  //     optional: status === 5 && optional ? false : optional,
-  //     status: status,
-  //     planEngageAuditMasterId: planEngageAuditMasterId,
-  //     description_per_TPA: description_per_TPA ?? null,
-  //     description_per_BDG: description_per_BDG,
-  //   });
-  // };
-
   const getStatus = (action: string) => {
     switch (action.toLowerCase()) {
       case "accept":
@@ -328,18 +328,6 @@ const MoreActions = ({ onAccept, onReject }: any) => {
         break;
     }
   };
-
-  // const getActions = () => {
-  //   if (
-  //     status.toLowerCase() === "pending" ||
-  //     status.toLowerCase() === "resubmitted" ||
-  //     status.toLowerCase() === "submitted"
-  //   ) {
-  //     return actions;
-  //   } else {
-  //     return [];
-  //   }
-  // };
 
   return (
     <div className="py-2 absolute right-16 bg-white shadow-lg z-10 rounded">
