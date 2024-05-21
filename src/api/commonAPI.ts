@@ -204,8 +204,13 @@ export const callAPIwithParams = async (
         "Unsupported HTTP method. Only GET and POST are supported."
       );
     }
+
     const { status, data, message } = response.data;
 
+    if (pathName === "/Document/DownloadFile") {
+      successCallback(true, "success", response.data, response.headers);
+      return
+    }
     successCallback(status, message, data, response.headers);
   } catch (error: any) {
     if (!!error.response) {

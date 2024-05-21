@@ -7,6 +7,7 @@ import { Autocomplete, TextField } from "@mui/material";
 import { Download, MoreVert } from "@mui/icons-material";
 import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
 import { downloadFileFromBase64 } from "@/utils/downloadFileFromBase64";
+import Loader from "@/components/common/Loader";
 
 const Page = () => {
   const [loaded, setLoaded] = useState<boolean>(false);
@@ -72,11 +73,14 @@ const Page = () => {
   };
 
   const handleDownload = (fileName: string) => {
+    setLoaded(false);
     const callBack = (status: boolean, message: string, data: any) => {
       if (status) {
+        setLoaded(true);
         downloadFileFromBase64(data, fileName);
       } else {
-        toast.error(message);
+        setLoaded(true);
+        toast.error("Please try again later!");
       }
     };
 
@@ -266,47 +270,51 @@ const Page = () => {
     getUserData();
   }, []);
 
-  return (
-    <Wrapper>
-      <div className="mx-5 justify-between flex flex-wrap w-full"></div>
-      <div className="my-2">
-        <Autocomplete
-          className="w-[30%]"
-          getOptionLabel={(option: any) =>
-            option.firstName + " " + option.lastName
-          }
-          options={userData.map((data) => data)}
-          renderInput={(params) => (
-            <TextField {...params} size="small" label="Username" />
-          )}
-          value={userName}
-          onChange={(event, record: any) => {
-            handleRecordChange(record);
-          }}
-        />
-      </div>
-      <div className="mx-auto flex flex-col w-full mt-4">
-        <div className="tableStyle">
-          <DataGrid
-            disableColumnMenu
-            disableRowSelectionOnClick
-            sx={{
-              fontSize: "12px",
-              height: "70vh",
-              "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
-                outline: "none !important",
-              },
-            }}
-            getRowId={
-              isDefault ? (row) => row.documentId : (row) => row.documentUserId
+  if (!loaded) return <Loader />;
+  if (loaded)
+    return (
+      <Wrapper>
+        <div className="mx-5 justify-between flex flex-wrap w-full"></div>
+        <div className="my-2">
+          <Autocomplete
+            className="w-[30%]"
+            getOptionLabel={(option: any) =>
+              option.firstName + " " + option.lastName
             }
-            rows={data}
-            columns={columns}
+            options={userData.map((data) => data)}
+            renderInput={(params) => (
+              <TextField {...params} size="small" label="Username" />
+            )}
+            value={userName}
+            onChange={(event, record: any) => {
+              handleRecordChange(record);
+            }}
           />
         </div>
-      </div>
-    </Wrapper>
-  );
+        <div className="mx-auto flex flex-col w-full mt-4">
+          <div className="tableStyle">
+            <DataGrid
+              disableColumnMenu
+              disableRowSelectionOnClick
+              sx={{
+                fontSize: "12px",
+                height: "70vh",
+                "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
+                  outline: "none !important",
+                },
+              }}
+              getRowId={
+                isDefault
+                  ? (row) => row.documentId
+                  : (row) => row.documentUserId
+              }
+              rows={data}
+              columns={columns}
+            />
+          </div>
+        </div>
+      </Wrapper>
+    );
 };
 
 export default Page;
