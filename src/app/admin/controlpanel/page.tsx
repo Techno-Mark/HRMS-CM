@@ -81,7 +81,7 @@ const Page = () => {
     };
 
     callAPIwithParams(
-      "/Document/DonwloadFile",
+      "/Document/DownloadFile",
       "post",
       callBack,
       {},
