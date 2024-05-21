@@ -33,6 +33,7 @@ const Page = () => {
       if (status) {
         handleDialogClose();
         toast.success(message);
+        getFormData("");
       } else {
         handleDialogClose();
         toast.error(message);
