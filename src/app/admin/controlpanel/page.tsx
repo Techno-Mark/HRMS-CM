@@ -12,7 +12,7 @@ const Page = () => {
   const [loaded, setLoaded] = useState<boolean>(false);
   const [data, setData] = useState([]);
   const [userData, setUserData] = useState([]);
-  const [userName, setUserName] = useState(null);
+  const [userName, setUserName] = useState<any>(null);
   const [isDefault, setIsDefault] = useState<boolean>(true);
   const [moreActionsClickedRowId, setmoreActionsClickedRowId] = useState(-1);
 
@@ -104,6 +104,7 @@ const Page = () => {
 
     const callBack = (status: boolean, message: string, data: any) => {
       if (status) {
+        getData(!!userName ? userName.id : "");
         toast.success(message);
       } else {
         toast.error(message);
@@ -330,7 +331,13 @@ const MoreActions = ({ onAccept, onReject }: any) => {
   };
 
   return (
-    <div className="py-2 absolute right-16 bg-white shadow-lg z-10 rounded">
+    <div
+      style={{
+        boxShadow:
+          "0 0 1px 0px rgba(0,0,0,0.30), 0 0 25px 4px rgba(0,0,0,0.22)",
+      }}
+      className="py-2 absolute right-16 bg-white shadow-lg z-10 rounded"
+    >
       {actions.map((action: string) => (
         <span
           key={action}

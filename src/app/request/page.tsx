@@ -22,10 +22,9 @@ import {
 } from "@/api/commonAPI";
 
 export default function Home() {
-  
   const getToken = useSearchParams();
   const tokenData = getToken.get("id");
-  const [loaded, setLoaded] = useState<boolean>(true);
+  const [loaded, setLoaded] = useState<boolean>(false);
   const [reportDetails, setReportDetails] = useState<any>([]);
   const [fileNameMap, setFileNameMap] = useState<any>({});
   const [expectedDateMap, setExpectedDateMap] = useState<any>({});
@@ -151,12 +150,12 @@ export default function Home() {
 
       const callBack = (status: boolean, message: string, data: string) => {
         if (status) {
-          const updateReportDetails = reportDetails.map((report: any) =>
-            report.id === id ? { ...report, documentStatus: data } : report
-          );
+          // const updateReportDetails = reportDetails.map((report: any) =>
+          //   report.id === id ? { ...report, documentStatus: data } : report
+          // );
 
-          setReportDetails(updateReportDetails);
-
+          // setReportDetails(updateReportDetails);
+          verifyToken(tokenData);
           setStatusMap(
             (prevStatusMap: Record<number, string> | null | undefined) => ({
               ...prevStatusMap,
@@ -251,9 +250,11 @@ export default function Home() {
         const status = statusMap[id] || "Pending";
         return (
           <>
-            <div className="h-full flex-col w-full flex justify-center text-center">
+            <div className="h-full w-full flex flex-wrap justify-center text-center">
               <div
-                className={`h-10 border-2 border-dotted bg-gray-100 ${
+                className={`${
+                  fileTypeErr1 ? "h-8" : "!h-10"
+                } border-2 border-dotted bg-gray-100 ${
                   (alert === 2 && highlightedRows.includes(id)) || fileTypeErr1
                     ? `border-red-600`
                     : `border-gray-300`
@@ -303,7 +304,7 @@ export default function Home() {
                   )}
                 </span>
               </div>
-              <span>
+              <div className="-mt-5">
                 {fileTypeErr1 === true ? (
                   <span className="text-red-600 text-[8px]">
                     File type must be txt, pdf, xlsx,xls, csv, doc, docx, rpt
@@ -316,7 +317,7 @@ export default function Home() {
                 ) : (
                   <></>
                 )}
-              </span>
+              </div>
             </div>
           </>
         );

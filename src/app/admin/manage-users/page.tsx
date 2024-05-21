@@ -36,22 +36,47 @@ const Page = () => {
     isActive: true,
     id: 0,
     password: "",
+    isViewMode: false,
   });
 
-  const getManageUserData = () => {
+  const getManageUserData = (userId: string, isViewMode?: boolean) => {
     const callBack = async (status: boolean, message: string, data: any) => {
       if (status) {
-        setLoaded(true);
-        setUserData(data);
+        if (!userId) {
+          setLoaded(true);
+          setUserData(data);
+        } else {
+          setUserFormData({
+            firstName: data[0].firstName,
+            middleName: data[0].middleName,
+            lastName: data[0].lastName,
+            roleId: data[0].roleId,
+            password: data[0].password,
+            contactPhone: data[0].contactPhone,
+            email: data[0].email,
+            id: data[0].id,
+            isActive: data[0].isActive,
+            isViewMode: isViewMode ? isViewMode : false,
+          });
+          setmoreActionsClickedRowId(-1);
+          setDialogOpen(true);
+        }
       } else {
         toast.error(message);
         setLoaded(true);
       }
     };
 
-    callAPIwithHeaders("/ManageUser/GetManageUser", "post", callBack, {
-      UserId: null,
-    });
+    callAPIwithParams(
+      "/User/Users",
+      "post",
+      callBack,
+      {},
+      {
+        name: "UserId",
+        value: String(userId),
+      }
+    );
   };
 
   const sendInvite = (id: number) => {
@@ -92,10 +117,11 @@ const Page = () => {
         isActive: true,
         id: 0,
         password: "",
+        isViewMode: false,
       });
       if (status) {
         toast.success(message);
-        getManageUserData();
+        getManageUserData("");
       } else {
         toast.error(message);
       }
@@ -105,7 +131,7 @@ const Page = () => {
   };
 
   useEffect(() => {
-    getManageUserData();
+    getManageUserData("");
   }, []);
 
   const handleClose = () => {
@@ -120,6 +146,7 @@ const Page = () => {
       isActive: true,
       id: 0,
       password: "",
+      isViewMode: false,
     });
     setEmailError(false);
   };
@@ -219,7 +246,15 @@ const Page = () => {
             </span>
 
             {moreActionsClickedRowId === params.row.id && (
-              <MoreActions onInviteSent={() => sendInvite(params.value)} />
+              <MoreActions
+                onInviteSent={() => sendInvite(params.value)}
+                onView={() => {
+                  getManageUserData(params.value, true);
+                }}
+                onEdit={() => {
+                  getManageUserData(params.value);
+                }}
+              />
             )}
           </div>
         );
@@ -278,6 +313,7 @@ const Page = () => {
           <div className="flex gap-2">
             <TextField
               required
+              value={userFormData.firstName}
               id="firstName"
               name="firstName"
               label="First Name"
@@ -287,9 +323,11 @@ const Page = () => {
               onChange={(e) =>
                 setUserFormData({ ...userFormData, firstName: e.target.value })
               }
+              disabled={userFormData.isViewMode}
             />
             <TextField
               required
+              value={userFormData.lastName}
               id="lastName"
               name="lastName"
               label="Last Name"
@@ -299,10 +337,12 @@ const Page = () => {
               onChange={(e) =>
                 setUserFormData({ ...userFormData, lastName: e.target.value })
               }
+              disabled={userFormData.isViewMode}
             />
           </div>
           <TextField
             required
+            value={userFormData.email}
             id="email"
             name="email"
             label="Email"
@@ -322,9 +362,11 @@ const Page = () => {
                 setEmailError(true);
               }
             }}
+            disabled={userFormData.isViewMode}
           />
           <TextField
             required
+            value={userFormData.contactPhone}
             id="contactPhone"
             name="contactPhone"
             label="Contact Number"
@@ -341,6 +383,7 @@ const Page = () => {
                 });
               }
             }}
+            disabled={userFormData.isViewMode}
           />
           <RadioGroup
             className="!flex !flex-row !gap-2"
@@ -349,8 +392,18 @@ const Page = () => {
               setUserFormData({ ...userFormData, roleId: e.target.value })
             }
           >
-            <FormControlLabel value="1" control={<Radio />} label="Admin" />
-            <FormControlLabel value="2" control={<Radio />} label="Candidate" />
+            <FormControlLabel
+              disabled={userFormData.isViewMode}
+              value="1"
+              control={<Radio />}
+              label="Admin"
+            />
+            <FormControlLabel
+              disabled={userFormData.isViewMode}
+              value="2"
+              control={<Radio />}
+              label="Candidate"
+            />
           </RadioGroup>
         </DialogContent>
         <DialogActions>
@@ -373,8 +426,8 @@ const Page = () => {
 
 export default Page;
 
-const MoreActions = ({ onInviteSent }: any) => {
-  const actions = ["send invite", "view"];
+const MoreActions = ({ onInviteSent, onView, onEdit }: any) => {
+  const actions = ["send invite", "view", "edit"];
   const actionStyle =
     "flex capitalize text-sm px-6 py-1 cursor-pointer hover:bg-slate-100";
 
@@ -385,7 +438,13 @@ const MoreActions = ({ onInviteSent }: any) => {
           key={action}
           className={actionStyle}
           onClick={
-            action.toLowerCase() === "send invite" ? onInviteSent : undefined
+            action.toLowerCase() === "send invite"
+              ? onInviteSent
+              : action.toLowerCase() === "view"
+              ? onView
+              : action.toLowerCase() === "edit"
+              ? onEdit
+              : undefined
           }
         >
           {action}

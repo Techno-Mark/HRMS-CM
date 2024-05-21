@@ -132,7 +132,7 @@ const Sidebar = ({
   const classes = useStyles();
   const pathname = usePathname();
   const [isOpen, setIsopen] = useState<boolean>(
-    pathname === "/admin/manage-form" ? true : false
+    pathname === "/admin/manage-document" ? true : false
   );
 
   return (

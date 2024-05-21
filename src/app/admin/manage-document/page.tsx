@@ -31,8 +31,10 @@ const Page = () => {
 
     const callBack = async (status: boolean, message: string, data: any) => {
       if (status) {
+        handleDialogClose();
         toast.success(message);
       } else {
+        handleDialogClose();
         toast.error(message);
       }
     };
@@ -138,7 +140,7 @@ const Page = () => {
                   });
                   setDialogOpen(true);
                 }}
-                onDelete={undefined}
+                onDelete={() => {}}
               />
             )}
           </div>
@@ -341,7 +343,7 @@ const MoreActions = ({ onEdit, onDelete }: any) => {
         onEdit();
         break;
       case "delete":
-        onDelete();
+        // onDelete();
         break;
       default:
         undefined;
