@@ -120,8 +120,6 @@ const Page = () => {
     }
   }, []);
 
-  
-
   if (loading)
     return (
       <Loader
@@ -141,8 +139,13 @@ const Page = () => {
             width={500}
             height={500}
           />
-          <span className="absolute -top-10 left-4">
-            {/* <Pabs width="200" height="50" /> */}
+          <span className="absolute top-4 left-16">
+            <Image
+              alt="logo1"
+              src={"/full_image.png"}
+              width={200}
+              height={50}
+            />
           </span>
           <div className="loginWrapper flex items-center flex-col pt-[10%] !w-[40%] font-normal border-l border-lightSilver">
             <p className="font-bold mb-[20px] text-darkCharcoal text-2xl">
