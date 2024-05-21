@@ -72,7 +72,7 @@ const Page = () => {
     });
   };
 
-  const handleDownload = (fileName: string) => {
+  const handleDownload = (fileLink: string, fileName: string) => {
     setLoaded(false);
     const callBack = (status: boolean, message: string, data: any) => {
       if (status) {
@@ -89,7 +89,7 @@ const Page = () => {
       "post",
       callBack,
       {},
-      { name: "FileLink", value: fileName }
+      { name: "FileLink", value: fileLink }
     );
   };
 
@@ -181,7 +181,9 @@ const Page = () => {
                 ? "pointer-events-none opacity-50"
                 : "cursor-pointer"
             }`}
-            onClick={() => handleDownload(params.value)}
+            onClick={() =>
+              handleDownload(params.value, params.row.uploadedDocumentName)
+            }
           >
             <Download />
           </div>
