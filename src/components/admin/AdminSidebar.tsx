@@ -155,24 +155,24 @@ const Sidebar = ({
             >
               {openSidebar ? (
                 <Image
-                  style={{
-                    filter:
-                      "brightness(0) saturate(100%) invert(100%) sepia(100%) hue-rotate(200deg)",
-                  }}
+                  // style={{
+                  //   filter:
+                  //     "brightness(0) saturate(100%) invert(100%) sepia(100%) hue-rotate(200deg)",
+                  // }}
                   alt="logo1"
-                  src={"/BDG_Logo.png"}
-                  width={50}
+                  src={"/full_image.png"}
+                  width={130}
                   height={30}
                 />
               ) : (
                 <Image
-                  style={{
-                    filter:
-                      "brightness(0) saturate(100%) invert(100%) sepia(100%) hue-rotate(200deg)",
-                  }}
+                  // style={{
+                  //   filter:
+                  //     "brightness(0) saturate(100%) invert(100%) sepia(100%) hue-rotate(200deg)",
+                  // }}
                   alt="logo"
-                  src={"/BDG_Logo.png"}
-                  width={50}
+                  src={"/short_image.png"}
+                  width={20}
                   height={30}
                 />
               )}
