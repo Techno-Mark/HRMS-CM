@@ -251,7 +251,7 @@ export default function Home() {
         const status = statusMap[id] || "Pending";
         return (
           <>
-            <div className="h-full w-full flex flex-wrap justify-center text-center">
+            <div className="h-full w-full flex flex-wrap items-center justify-center text-center">
               <div
                 className={`${
                   fileTypeErr1 ? "h-8" : "!h-10"

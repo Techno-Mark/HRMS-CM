@@ -113,15 +113,20 @@ const Page = () => {
     if (userFormData.contactPhone.trim().length < 10) {
       setPhoneError(true);
       return;
+    } else {
+      setPhoneError(false);
     }
 
     if (
+      userFormData.roleId === "1" &&
       !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
         userFormData.password
       )
     ) {
       setPwdErr(true);
       return;
+    } else {
+      setPwdErr(false);
     }
 
     const callBack = async (status: boolean, message: string, data: any) => {
@@ -146,7 +151,7 @@ const Page = () => {
       }
     };
 
-    // callAPIwithHeaders("/User/AddUpdateUser", "post", callBack, userFormData);
+    callAPIwithHeaders("/User/AddUpdateUser", "post", callBack, userFormData);
   };
 
   useEffect(() => {
@@ -347,7 +352,10 @@ const Page = () => {
               fullWidth
               variant="standard"
               onChange={(e) =>
-                setUserFormData({ ...userFormData, firstName: e.target.value })
+                setUserFormData({
+                  ...userFormData,
+                  firstName: e.target.value,
+                })
               }
               disabled={userFormData.isViewMode}
             />
@@ -368,7 +376,7 @@ const Page = () => {
           </div>
           <TextField
             required
-            autoComplete="off"
+            autoComplete="new-email"
             value={userFormData.email}
             id="email"
             name="email"
@@ -405,6 +413,7 @@ const Page = () => {
               phoneError && "Please enter valid 10 digit contact number"
             }
             onChange={(e) => {
+              setPhoneError(false);
               if (e.target.value.length > 10) {
                 return;
               } else if (!/^[0-9\s]*$/.test(e.target.value)) {
@@ -440,7 +449,7 @@ const Page = () => {
           </RadioGroup>
           {userFormData.roleId === "1" && (
             <TextField
-              autoComplete="off"
+              autoComplete="new-password"
               name="password"
               type={showPassword ? "text" : "password"}
               required
