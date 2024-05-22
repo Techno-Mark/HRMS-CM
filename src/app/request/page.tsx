@@ -172,6 +172,7 @@ export default function Home() {
           }, 3000);
           setIsUploading(false);
           setProgress(0);
+          toast.success("File uploaded sucessfully");
         } else {
           setIsUploading(false);
           setFileNameMap(

@@ -78,6 +78,7 @@ const Page = () => {
       if (status) {
         setLoaded(true);
         downloadFileFromBase64(data, fileName);
+        toast.success("File Downloaded Sucessfully");
       } else {
         setLoaded(true);
         toast.error("Please try again later!");

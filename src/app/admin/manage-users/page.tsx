@@ -3,7 +3,7 @@ import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
 import LinksDialog from "@/components/LinksDialog";
 import Wrapper from "@/components/Wrapper";
 import Loader from "@/components/common/Loader";
-import { Add, MoreVert } from "@mui/icons-material";
+import { Add, MoreVert, Visibility, VisibilityOff } from "@mui/icons-material";
 import {
   Button,
   Dialog,
@@ -11,6 +11,8 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  IconButton,
+  InputAdornment,
   Radio,
   RadioGroup,
   TextField,
@@ -20,12 +22,16 @@ import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 const Page = () => {
+  const [isLastColumn, setLastColumn] = useState<boolean>(false);
   const [links, setLinks] = useState<any>([]);
-  const [userData, setUserData] = useState([]);
+  const [userData, setUserData] = useState<any>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [emailError, setEmailError] = useState<boolean>(false);
   const [moreActionsClickedRowId, setmoreActionsClickedRowId] = useState(-1);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [phoneError, setPhoneError] = useState<boolean>(false);
+  const [pwdErr, setPwdErr] = useState<boolean>(false);
   const [userFormData, setUserFormData] = useState({
     firstName: "",
     middleName: "",
@@ -104,6 +110,19 @@ const Page = () => {
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
+    if (userFormData.contactPhone.trim().length < 10) {
+      setPhoneError(true);
+      return;
+    }
+
+    if (
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+        userFormData.password
+      )
+    ) {
+      setPwdErr(true);
+      return;
+    }
 
     const callBack = async (status: boolean, message: string, data: any) => {
       setDialogOpen(false);
@@ -127,7 +146,7 @@ const Page = () => {
       }
     };
 
-    callAPIwithHeaders("/User/AddUpdateUser", "post", callBack, userFormData);
+    // callAPIwithHeaders("/User/AddUpdateUser", "post", callBack, userFormData);
   };
 
   useEffect(() => {
@@ -219,7 +238,6 @@ const Page = () => {
         return <div>{params.value === 1 ? "Admin" : "Candidate"}</div>;
       },
     },
-
     {
       field: "id",
       headerName: "Action",
@@ -232,15 +250,20 @@ const Page = () => {
       width: 80,
       sortable: false,
       renderCell: (params) => {
+        console.log(params);
+
         return (
           <div>
             <span
               className={`relative cursor-pointer`}
-              onClick={() =>
+              onClick={() => {
+                setLastColumn(
+                  params.value === userData[userData.length - 1].id
+                );
                 setmoreActionsClickedRowId((prev) =>
                   prev !== params.row.id ? params.row.id : -1
-                )
-              }
+                );
+              }}
             >
               <MoreVert />
             </span>
@@ -292,6 +315,9 @@ const Page = () => {
                 "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },
+                ".css-s1v7zr-MuiDataGrid-virtualScrollerRenderZone": {
+                  paddingBottom: "40px",
+                },
               }}
               getRowId={(row) => row.id}
               rows={userData}
@@ -342,6 +368,7 @@ const Page = () => {
           </div>
           <TextField
             required
+            autoComplete="off"
             value={userFormData.email}
             id="email"
             name="email"
@@ -373,8 +400,14 @@ const Page = () => {
             type="text"
             fullWidth
             variant="standard"
+            error={phoneError}
+            helperText={
+              phoneError && "Please enter valid 10 digit contact number"
+            }
             onChange={(e) => {
-              if (e.target.value.length >= 10) {
+              if (e.target.value.length > 10) {
+                return;
+              } else if (!/^[0-9\s]*$/.test(e.target.value)) {
                 return;
               } else {
                 setUserFormData({
@@ -405,6 +438,34 @@ const Page = () => {
               label="Candidate"
             />
           </RadioGroup>
+          {userFormData.roleId === "1" && (
+            <TextField
+              autoComplete="off"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              required
+              value={userFormData.password}
+              error={pwdErr}
+              helperText={
+                pwdErr &&
+                "Password must be a minimum of eight characters and include a mix of numbers, uppercase, lowercase letters, and special characters."
+              }
+              onChange={(e) =>
+                setUserFormData({ ...userFormData, password: e.target.value })
+              }
+              label="Password"
+              variant="standard"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton onClick={() => setShowPassword(!showPassword)}>
+                      {!showPassword ? <Visibility /> : <VisibilityOff />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+          )}
         </DialogContent>
         <DialogActions>
           <Button color="error" onClick={handleClose}>

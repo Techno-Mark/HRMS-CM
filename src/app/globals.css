@@ -1,3 +1,19 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* .MuiDataGrid-row {
+  background-color: blue;
+} */
+/* .MuiDataGrid-row--lastVisible {
+  color: cadetblue;
+}
+
+.MuiDataGrid-virtualScrollerRenderZone
+  .css-s1v7zr-MuiDataGrid-virtualScrollerRenderZone:last-child {
+  background-color: brown;
+} */
+
+/* .css-s1v7zr-MuiDataGrid-virtualScrollerRenderZone{
+    padding-bottom: 90px;
+} */
