@@ -110,6 +110,9 @@ const Page = () => {
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
+    if (emailError) {
+      return;
+    }
     if (userFormData.contactPhone.trim().length < 10) {
       setPhoneError(true);
       return;
@@ -130,19 +133,7 @@ const Page = () => {
     }
 
     const callBack = async (status: boolean, message: string, data: any) => {
-      setDialogOpen(false);
-      setUserFormData({
-        firstName: "",
-        middleName: "",
-        lastName: "",
-        email: "",
-        contactPhone: "",
-        roleId: "2",
-        isActive: true,
-        id: 0,
-        password: "",
-        isViewMode: false,
-      });
+      handleClose();
       if (status) {
         toast.success(message);
         getManageUserData("");
@@ -173,6 +164,8 @@ const Page = () => {
       isViewMode: false,
     });
     setEmailError(false);
+    setPhoneError(false);
+    setPwdErr(false);
   };
 
   const columns: GridColDef[] = [
@@ -459,9 +452,10 @@ const Page = () => {
                 pwdErr &&
                 "Password must be a minimum of eight characters and include a mix of numbers, uppercase, lowercase letters, and special characters."
               }
-              onChange={(e) =>
-                setUserFormData({ ...userFormData, password: e.target.value })
-              }
+              onChange={(e) => {
+                setPwdErr(false);
+                setUserFormData({ ...userFormData, password: e.target.value });
+              }}
               label="Password"
               variant="standard"
               InputProps={{

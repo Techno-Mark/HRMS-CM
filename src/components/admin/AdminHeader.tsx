@@ -110,11 +110,11 @@ const Header = ({ openSidebar }: HeaderPropsType) => {
             </span>
           </div>
           <div className="relative flex gap-[30px]">
-            <NotificationIcon />
+            {/* <NotificationIcon /> */}
 
-            <div className="absolute bottom-3 left-7">
+            {/* <div className="absolute bottom-3 left-7">
               <Badge color="primary" variant="dot" className="right-2"></Badge>
-            </div>
+            </div> */}
 
             <div
               className="cursor-pointer relative flex gap-2.5 items-center"

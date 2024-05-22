@@ -198,6 +198,9 @@ const Page = () => {
               "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
                 outline: "none !important",
               },
+              ".css-s1v7zr-MuiDataGrid-virtualScrollerRenderZone": {
+                paddingBottom: "40px",
+              },
             }}
             columns={columns}
             getRowId={(row) => row.documentId}

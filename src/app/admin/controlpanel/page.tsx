@@ -305,6 +305,9 @@ const Page = () => {
                 "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },
+                ".css-s1v7zr-MuiDataGrid-virtualScrollerRenderZone": {
+                  paddingBottom: "40px",
+                },
               }}
               getRowId={
                 isDefault
