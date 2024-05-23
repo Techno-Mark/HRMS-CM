@@ -24,6 +24,7 @@ const Page = () => {
       setIsDefault(true);
       const callBack = (status: boolean, message: string, data: any) => {
         if (status) {
+          setLoaded(true);
           setData(data);
         }
       };
