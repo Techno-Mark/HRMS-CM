@@ -200,8 +200,6 @@ export default function Home() {
   const getDocumentsList = (id: string) => {
     const callBack = async (status: boolean, message: string, data: any) => {
       if (status) {
-        console.log(data);
-
         setReportDetails(data);
       } else {
       }

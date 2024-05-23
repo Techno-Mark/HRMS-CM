@@ -40,8 +40,6 @@ const Page = () => {
     }
 
     const callBack = (status: boolean, message: string, data: any) => {
-      console.log(status, message);
-
       if (status) {
         if (!data.token) {
           toast.error("User or token is undefined!");
@@ -52,7 +50,6 @@ const Page = () => {
         }
         setIsLoggedIn(true);
         setLoading(false);
-        console.log(data);
 
         Cookies.set(
           "userInfo",

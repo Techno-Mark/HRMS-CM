@@ -248,8 +248,6 @@ const Page = () => {
       width: 80,
       sortable: false,
       renderCell: (params) => {
-        console.log(params);
-
         return (
           <div>
             <span
@@ -314,7 +312,7 @@ const Page = () => {
                   outline: "none !important",
                 },
                 ".css-s1v7zr-MuiDataGrid-virtualScrollerRenderZone": {
-                  paddingBottom: "40px",
+                  paddingBottom: "60px",
                 },
               }}
               getRowId={(row) => row.id}
@@ -348,6 +346,23 @@ const Page = () => {
                 setUserFormData({
                   ...userFormData,
                   firstName: e.target.value,
+                })
+              }
+              disabled={userFormData.isViewMode}
+            />
+            <TextField
+              required
+              value={userFormData.middleName}
+              id="middleName"
+              name="middleName"
+              label="Middle Name"
+              type="text"
+              fullWidth
+              variant="standard"
+              onChange={(e) =>
+                setUserFormData({
+                  ...userFormData,
+                  middleName: e.target.value,
                 })
               }
               disabled={userFormData.isViewMode}
@@ -496,7 +511,13 @@ const MoreActions = ({ onInviteSent, onView, onEdit }: any) => {
     "flex capitalize text-sm px-6 py-1 cursor-pointer hover:bg-slate-100";
 
   return (
-    <div className="py-2 absolute right-16 bg-white shadow-lg z-10 rounded">
+    <div
+      style={{
+        boxShadow:
+          "0 0 1px 0px rgba(0,0,0,0.30), 0 0 25px 4px rgba(0,0,0,0.22)",
+      }}
+      className="py-2 absolute right-16 bg-white shadow-lg z-10 rounded"
+    >
       {actions.map((action: string) => (
         <span
           key={action}
