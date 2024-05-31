@@ -1,28 +1,44 @@
 "use client";
+//react hooks
+import { useEffect, useState } from "react";
+//3rd party libraries & icons
 import { toast } from "react-toastify";
-import Wrapper from "@/components/Wrapper";
-import React, { useEffect, useState } from "react";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Autocomplete, TextField } from "@mui/material";
+import {
+  DataGrid,
+  GridColDef,
+  GridRowParams,
+  GridRowSelectionModel,
+} from "@mui/x-data-grid";
 import { Download, MoreVert } from "@mui/icons-material";
+import { Autocomplete, Button, TextField } from "@mui/material";
+//custom components
+import Wrapper from "@/components/Wrapper";
+import Loader from "@/components/common/Loader";
+// common types, variables & functions
 import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
 import { downloadFileFromBase64 } from "@/utils/downloadFileFromBase64";
-import Loader from "@/components/common/Loader";
+import {
+  DefaultData,
+  UserDropDownType,
+  UserTableData,
+} from "@/types/ControlPanel";
 
 const Page = () => {
   const [loaded, setLoaded] = useState<boolean>(false);
-  const [data, setData] = useState([]);
-  const [userData, setUserData] = useState([]);
-  const [userName, setUserName] = useState<any>(null);
+  const [data, setData] = useState<DefaultData[] | UserTableData[]>([]);
+  const [userData, setUserData] = useState<UserDropDownType[]>([]);
+  const [userName, setUserName] = useState<UserDropDownType | null>(null);
   const [isDefault, setIsDefault] = useState<boolean>(true);
-  const [moreActionsClickedRowId, setmoreActionsClickedRowId] = useState(-1);
+  const [moreActionsClickedRowId, setmoreActionsClickedRowId] =
+    useState<number>(-1);
+  const [rowSelectionModel, setRowSelectionModel] =
+    useState<GridRowSelectionModel>([]);
 
-  const getData = (userId: string) => {
+  const getData = (userId: string): void => {
     setLoaded(false);
-
     if (userId.length === 0) {
       setIsDefault(true);
-      const callBack = (status: boolean, message: string, data: any) => {
+      const callBack = (status: boolean, message: string, data: any): void => {
         if (status) {
           setLoaded(true);
           setData(data);
@@ -38,7 +54,11 @@ const Page = () => {
       );
     } else {
       setIsDefault(false);
-      const callBack = async (status: boolean, message: string, data: any) => {
+      const callBack = async (
+        status: boolean,
+        message: string,
+        data: any
+      ): Promise<void> => {
         if (status) {
           setLoaded(true);
           setData(data);
@@ -95,6 +115,28 @@ const Page = () => {
     );
   };
 
+  const handleDownloadInBulk = (params: any, filename: string) => {
+    setLoaded(false);
+    const callBack = (status: boolean, message: string, data: any) => {
+      if (status) {
+        setLoaded(true);
+        downloadFileFromBase64(data, `${filename}.zip`);
+        toast.success("File Downloaded Sucessfully");
+        setRowSelectionModel([]);
+      } else {
+        setLoaded(true);
+        toast.error("Please try again later!");
+      }
+    };
+
+    callAPIwithHeaders(
+      "/Document/DownloadFileInBulk",
+      "post",
+      callBack,
+      params
+    );
+  };
+
   const handleRecordChange = (record: any) => {
     if (record !== null) {
       getData(record.id);
@@ -102,6 +144,7 @@ const Page = () => {
     } else {
       getData("");
       setUserName(null);
+      setRowSelectionModel([]);
     }
   };
 
@@ -110,7 +153,7 @@ const Page = () => {
 
     const callBack = (status: boolean, message: string, data: any) => {
       if (status) {
-        getData(!!userName ? userName.id : "");
+        getData(!!userName ? String(userName.id) : "");
         toast.success(message);
       } else {
         toast.error(message);
@@ -127,6 +170,7 @@ const Page = () => {
     {
       field: "firstName",
       headerName: "Username",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -146,6 +190,7 @@ const Page = () => {
     {
       field: "documentName",
       headerName: "Document",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -154,8 +199,9 @@ const Page = () => {
       ),
     },
     {
-      field: "status",
+      field: "statusDescription",
       headerName: "Status",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -163,12 +209,17 @@ const Page = () => {
         </span>
       ),
       renderCell: (params) => {
-        return <div>{!params.row.status ? "-" : params.row.status}</div>;
+        return (
+          <div>
+            {!params.row.statusDescription ? "-" : params.row.statusDescription}
+          </div>
+        );
       },
     },
     {
       field: "documentLink",
       headerName: "Download",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -195,6 +246,7 @@ const Page = () => {
     {
       field: "updatedOn",
       headerName: "File Name",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -212,6 +264,7 @@ const Page = () => {
     {
       field: "uploadedDocumentName",
       headerName: "File Name",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -239,7 +292,7 @@ const Page = () => {
             <span
               className={`relative ${
                 params.row.uploadedDocumentName &&
-                !(params.row.status.toLowerCase() === "accepted")
+                !(params.row.statusDescription.toLowerCase() === "accepted")
                   ? "cursor-pointer"
                   : "pointer-events-none opacity-50"
               }`}
@@ -279,13 +332,14 @@ const Page = () => {
     return (
       <Wrapper>
         <div className="mx-5 justify-between flex flex-wrap w-full"></div>
-        <div className="my-2">
+        <div className="my-2 px-3 flex justify-between">
           <Autocomplete
             className="w-[30%]"
             getOptionLabel={(option: any) =>
               option.firstName + " " + option.lastName
             }
             options={userData.map((data) => data)}
+            getOptionKey={(option: any) => option.id}
             renderInput={(params) => (
               <TextField {...params} size="small" label="Username" />
             )}
@@ -294,10 +348,37 @@ const Page = () => {
               handleRecordChange(record);
             }}
           />
+          {rowSelectionModel.length > 1 && !!userName && (
+            <Button
+              variant="contained"
+              onClick={() => {
+                const body = data
+                  .filter((d: any) =>
+                    rowSelectionModel.includes(d.documentUserId)
+                  )
+                  .map((d: any) => d.documentName);
+
+                handleDownloadInBulk(
+                  {
+                    email: userName!.email,
+                    userId: userName!.id,
+                    documentName: body,
+                  },
+                  `${userName!.firstName}_${userName!.lastName}`
+                );
+              }}
+            >
+              Download
+            </Button>
+          )}
         </div>
         <div className="mx-auto flex flex-col w-full mt-4">
           <div className="tableStyle">
             <DataGrid
+              checkboxSelection
+              isRowSelectable={(params: GridRowParams) =>
+                !!params.row.uploadedDocumentName
+              }
               disableColumnMenu
               disableRowSelectionOnClick
               sx={{
@@ -317,6 +398,9 @@ const Page = () => {
               }
               rows={data}
               columns={columns}
+              onRowSelectionModelChange={(newRowSelectionModel) => {
+                setRowSelectionModel(newRowSelectionModel);
+              }}
             />
           </div>
         </div>

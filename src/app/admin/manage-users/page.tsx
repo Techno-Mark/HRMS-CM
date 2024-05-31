@@ -1,9 +1,7 @@
 "use client";
-import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
-import LinksDialog from "@/components/LinksDialog";
-import Wrapper from "@/components/Wrapper";
-import Loader from "@/components/common/Loader";
-import { Add, MoreVert, Visibility, VisibilityOff } from "@mui/icons-material";
+//react hooks
+import { useEffect, useState } from "react";
+//3rd party libraries & icons
 import {
   Button,
   Dialog,
@@ -17,22 +15,27 @@ import {
   RadioGroup,
   TextField,
 } from "@mui/material";
-import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import React, { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { DataGrid, GridColDef } from "@mui/x-data-grid";
+import { Add, MoreVert, Visibility, VisibilityOff } from "@mui/icons-material";
+//custom components
+import Wrapper from "@/components/Wrapper";
+import Loader from "@/components/common/Loader";
+// common types, variables & functions
+import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
+import { UserDataType, UserFormDataType } from "@/types/ManageUsers";
 
 const Page = () => {
-  const [isLastColumn, setLastColumn] = useState<boolean>(false);
-  const [links, setLinks] = useState<any>([]);
-  const [userData, setUserData] = useState<any>([]);
+  const [userData, setUserData] = useState<UserDataType[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [emailError, setEmailError] = useState<boolean>(false);
-  const [moreActionsClickedRowId, setmoreActionsClickedRowId] = useState(-1);
+  const [moreActionsClickedRowId, setmoreActionsClickedRowId] =
+    useState<number>(-1);
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [phoneError, setPhoneError] = useState<boolean>(false);
   const [pwdErr, setPwdErr] = useState<boolean>(false);
-  const [userFormData, setUserFormData] = useState({
+  const [userFormData, setUserFormData] = useState<UserFormDataType>({
     firstName: "",
     middleName: "",
     lastName: "",
@@ -45,23 +48,19 @@ const Page = () => {
     isViewMode: false,
   });
 
-  const getManageUserData = (userId: string, isViewMode?: boolean) => {
-    const callBack = async (status: boolean, message: string, data: any) => {
+  const getManageUserData = (userId: string, isViewMode?: boolean): void => {
+    const callBack = async (
+      status: boolean,
+      message: string,
+      data: any
+    ): Promise<void> => {
       if (status) {
         if (!userId) {
           setLoaded(true);
           setUserData(data);
         } else {
           setUserFormData({
-            firstName: data[0].firstName,
-            middleName: data[0].middleName,
-            lastName: data[0].lastName,
-            roleId: data[0].roleId,
-            password: data[0].password,
-            contactPhone: data[0].contactPhone,
-            email: data[0].email,
-            id: data[0].id,
-            isActive: data[0].isActive,
+            ...data[0],
             isViewMode: isViewMode ? isViewMode : false,
           });
           setmoreActionsClickedRowId(-1);
@@ -85,17 +84,21 @@ const Page = () => {
     );
   };
 
-  const sendInvite = (id: number) => {
+  const sendInvite = (id: number): void => {
     setLoaded(false);
 
-    const callBack = async (status: boolean, message: string, data: any) => {
+    const callBack = async (
+      status: boolean,
+      message: string
+    ): Promise<void> => {
       if (status) {
-        setLinks([data.link]);
         setLoaded(true);
-        // toast.success(message);
+        toast.success(message);
+        setmoreActionsClickedRowId(-1);
       } else {
         setLoaded(true);
         toast.error(message);
+        setmoreActionsClickedRowId(-1);
       }
     };
 
@@ -108,31 +111,17 @@ const Page = () => {
     );
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    if (emailError) {
+    if (ifValidationErrorExists()) {
       return;
-    }
-    if (userFormData.contactPhone.trim().length < 10) {
-      setPhoneError(true);
-      return;
-    } else {
-      setPhoneError(false);
     }
 
-    if (
-      userFormData.roleId === "1" &&
-      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
-        userFormData.password
-      )
-    ) {
-      setPwdErr(true);
-      return;
-    } else {
-      setPwdErr(false);
-    }
-
-    const callBack = async (status: boolean, message: string, data: any) => {
+    const callBack = async (
+      status: boolean,
+      message: string,
+      data: any
+    ): Promise<void> => {
       handleClose();
       if (status) {
         toast.success(message);
@@ -145,11 +134,36 @@ const Page = () => {
     callAPIwithHeaders("/User/AddUpdateUser", "post", callBack, userFormData);
   };
 
-  useEffect(() => {
-    getManageUserData("");
-  }, []);
+  const sendReminder = (userId: string): void => {
+    const callBack = async (
+      status: boolean,
+      message: string
+    ): Promise<void> => {
+      if (status) {
+        toast.success(message);
+        setLoaded(true);
+      } else {
+        toast.error(message);
+        setLoaded(true);
+      }
+    };
 
-  const handleClose = () => {
+    callAPIwithParams(
+      "/Document/SendReminder",
+      "post",
+      callBack,
+      {},
+      {
+        name: "UserId",
+        value: String(userId),
+      }
+    );
+  };
+
+  const handleClose = (): void => {
+    setPwdErr(false);
+    setEmailError(false);
+    setPhoneError(false);
     setDialogOpen(false);
     setUserFormData({
       firstName: "",
@@ -163,15 +177,44 @@ const Page = () => {
       password: "",
       isViewMode: false,
     });
-    setEmailError(false);
-    setPhoneError(false);
-    setPwdErr(false);
+  };
+
+  const ifValidationErrorExists = (): boolean => {
+    //if email contains error
+    if (emailError) {
+      return true;
+    }
+
+    //contact number contains error
+    if (userFormData.contactPhone.trim().length < 10) {
+      setPhoneError(true);
+      return true;
+    } else {
+      setPhoneError(false);
+    }
+
+    //if password field contains error
+    if (
+      userFormData.roleId === "1" &&
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+        userFormData.password
+      )
+    ) {
+      setPwdErr(true);
+      return true;
+    } else {
+      setPwdErr(false);
+    }
+
+    //no validation error
+    return false;
   };
 
   const columns: GridColDef[] = [
     {
       field: "firstName",
       headerName: "Name",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -179,12 +222,21 @@ const Page = () => {
         </span>
       ),
       renderCell: (params) => {
-        return <div>{params.row.firstName + " " + params.row.lastName}</div>;
+        return (
+          <div>
+            {params.row.firstName +
+              " " +
+              params.row.middleName +
+              " " +
+              params.row.lastName}
+          </div>
+        );
       },
     },
     {
       field: "email",
       headerName: "Email",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -195,6 +247,7 @@ const Page = () => {
     {
       field: "contactPhone",
       headerName: "Mobile",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -205,6 +258,7 @@ const Page = () => {
     {
       field: "isActive",
       headerName: "Status",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -226,6 +280,7 @@ const Page = () => {
     {
       field: "roleId",
       headerName: "Role",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -253,9 +308,6 @@ const Page = () => {
             <span
               className={`relative cursor-pointer`}
               onClick={() => {
-                setLastColumn(
-                  params.value === userData[userData.length - 1].id
-                );
                 setmoreActionsClickedRowId((prev) =>
                   prev !== params.row.id ? params.row.id : -1
                 );
@@ -273,6 +325,9 @@ const Page = () => {
                 onEdit={() => {
                   getManageUserData(params.value);
                 }}
+                onRemind={() => {
+                  sendReminder(params.value);
+                }}
               />
             )}
           </div>
@@ -281,25 +336,15 @@ const Page = () => {
     },
   ];
 
+  useEffect(() => {
+    getManageUserData("");
+  }, []);
+
   return (
     <>
       {!loaded && <Loader />}
       <Wrapper>
-        <div className="flex-row flex flex-wrap pb-2 justify-between w-full">
-          <div className="justify-between flex flex-wrap w-full">
-            <div className="justify-start flex items-center font-semibold">
-              Manage Users
-            </div>
-
-            <Button
-              className="flex gap-2"
-              variant="contained"
-              onClick={() => setDialogOpen(true)}
-            >
-              Add User <Add className="text-sm" />
-            </Button>
-          </div>
-        </div>
+        <HeaderComponent setDialogOpen={setDialogOpen} />
         <div className="mx-auto flex flex-col w-full mt-4">
           <div className="tableStyle">
             <DataGrid
@@ -321,192 +366,42 @@ const Page = () => {
             />
           </div>
         </div>
+        <UserFormDialog
+          dialogOpen={dialogOpen}
+          handleClose={handleClose}
+          handleSubmit={handleSubmit}
+          userFormData={userFormData}
+          setUserFormData={setUserFormData}
+          emailError={emailError}
+          setEmailError={setEmailError}
+          phoneError={phoneError}
+          setPhoneError={setPhoneError}
+          showPassword={showPassword}
+          pwdErr={pwdErr}
+          setShowPassword={setShowPassword}
+          setPwdErr={setPwdErr}
+        />
       </Wrapper>
-      <Dialog
-        open={dialogOpen}
-        onClose={handleClose}
-        PaperProps={{
-          component: "form",
-          onSubmit: handleSubmit,
-        }}
-      >
-        <DialogTitle>Enter User Details</DialogTitle>
-        <DialogContent className="w-[500px] flex flex-col gap-4">
-          <div className="flex gap-2">
-            <TextField
-              required
-              value={userFormData.firstName}
-              id="firstName"
-              name="firstName"
-              label="First Name"
-              type="text"
-              fullWidth
-              variant="standard"
-              onChange={(e) =>
-                setUserFormData({
-                  ...userFormData,
-                  firstName: e.target.value,
-                })
-              }
-              disabled={userFormData.isViewMode}
-            />
-            <TextField
-              required
-              value={userFormData.middleName}
-              id="middleName"
-              name="middleName"
-              label="Middle Name"
-              type="text"
-              fullWidth
-              variant="standard"
-              onChange={(e) =>
-                setUserFormData({
-                  ...userFormData,
-                  middleName: e.target.value,
-                })
-              }
-              disabled={userFormData.isViewMode}
-            />
-            <TextField
-              required
-              value={userFormData.lastName}
-              id="lastName"
-              name="lastName"
-              label="Last Name"
-              type="text"
-              fullWidth
-              variant="standard"
-              onChange={(e) =>
-                setUserFormData({ ...userFormData, lastName: e.target.value })
-              }
-              disabled={userFormData.isViewMode}
-            />
-          </div>
-          <TextField
-            required
-            autoComplete="new-email"
-            value={userFormData.email}
-            id="email"
-            name="email"
-            label="Email"
-            type="email"
-            fullWidth
-            variant="standard"
-            error={emailError}
-            helperText={emailError ? "Not Valid" : ""}
-            onChange={(e) => {
-              setEmailError(false);
-              setUserFormData({ ...userFormData, email: e.target.value });
-            }}
-            onBlur={(e) => {
-              if (
-                !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(e.target.value.trim())
-              ) {
-                setEmailError(true);
-              }
-            }}
-            disabled={userFormData.isViewMode}
-          />
-          <TextField
-            required
-            value={userFormData.contactPhone}
-            id="contactPhone"
-            name="contactPhone"
-            label="Contact Number"
-            type="text"
-            fullWidth
-            variant="standard"
-            error={phoneError}
-            helperText={
-              phoneError && "Please enter valid 10 digit contact number"
-            }
-            onChange={(e) => {
-              setPhoneError(false);
-              if (e.target.value.length > 10) {
-                return;
-              } else if (!/^[0-9\s]*$/.test(e.target.value)) {
-                return;
-              } else {
-                setUserFormData({
-                  ...userFormData,
-                  contactPhone: e.target.value,
-                });
-              }
-            }}
-            disabled={userFormData.isViewMode}
-          />
-          <RadioGroup
-            className="!flex !flex-row !gap-2"
-            value={userFormData.roleId}
-            onChange={(e) =>
-              setUserFormData({ ...userFormData, roleId: e.target.value })
-            }
-          >
-            <FormControlLabel
-              disabled={userFormData.isViewMode}
-              value="1"
-              control={<Radio />}
-              label="Admin"
-            />
-            <FormControlLabel
-              disabled={userFormData.isViewMode}
-              value="2"
-              control={<Radio />}
-              label="Candidate"
-            />
-          </RadioGroup>
-          {userFormData.roleId === "1" && (
-            <TextField
-              autoComplete="new-password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              required
-              value={userFormData.password}
-              error={pwdErr}
-              helperText={
-                pwdErr &&
-                "Password must be a minimum of eight characters and include a mix of numbers, uppercase, lowercase letters, and special characters."
-              }
-              onChange={(e) => {
-                setPwdErr(false);
-                setUserFormData({ ...userFormData, password: e.target.value });
-              }}
-              label="Password"
-              variant="standard"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)}>
-                      {!showPassword ? <Visibility /> : <VisibilityOff />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button color="error" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button type="submit">Submit</Button>
-        </DialogActions>
-      </Dialog>
-      <LinksDialog
-        links={links}
-        handleClose={() => {
-          setmoreActionsClickedRowId(-1);
-          setLinks([]);
-        }}
-      />
     </>
   );
 };
 
 export default Page;
 
-const MoreActions = ({ onInviteSent, onView, onEdit }: any) => {
-  const actions = ["send invite", "view", "edit"];
+type MoreActionsType = {
+  onInviteSent: () => void;
+  onView: () => void;
+  onEdit: () => void;
+  onRemind: () => void;
+};
+
+const MoreActions = ({
+  onInviteSent,
+  onView,
+  onEdit,
+  onRemind,
+}: MoreActionsType) => {
+  const actions = ["view", "edit", "send invite", "send reminder"];
   const actionStyle =
     "flex capitalize text-sm px-6 py-1 cursor-pointer hover:bg-slate-100";
 
@@ -529,12 +424,245 @@ const MoreActions = ({ onInviteSent, onView, onEdit }: any) => {
               ? onView
               : action.toLowerCase() === "edit"
               ? onEdit
+              : action.toLowerCase() === "send reminder"
+              ? onRemind
               : undefined
           }
         >
           {action}
         </span>
       ))}
+    </div>
+  );
+};
+
+type UserFormDialogType = {
+  dialogOpen: boolean;
+  handleClose: () => void;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  userFormData: UserFormDataType;
+  setUserFormData: React.Dispatch<React.SetStateAction<UserFormDataType>>;
+  emailError: boolean;
+  setEmailError: React.Dispatch<React.SetStateAction<boolean>>;
+  phoneError: boolean;
+  setPhoneError: React.Dispatch<React.SetStateAction<boolean>>;
+  showPassword: boolean;
+  pwdErr: boolean;
+  setShowPassword: React.Dispatch<React.SetStateAction<boolean>>;
+  setPwdErr: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const UserFormDialog = ({
+  dialogOpen,
+  handleClose,
+  handleSubmit,
+  userFormData,
+  setUserFormData,
+  emailError,
+  setEmailError,
+  phoneError,
+  setPhoneError,
+  showPassword,
+  pwdErr,
+  setShowPassword,
+  setPwdErr,
+}: UserFormDialogType) => {
+  return (
+    <Dialog
+      open={dialogOpen}
+      onClose={handleClose}
+      PaperProps={{
+        component: "form",
+        onSubmit: handleSubmit,
+      }}
+    >
+      <DialogTitle>Enter User Details</DialogTitle>
+      <DialogContent className="w-[500px] flex flex-col gap-4">
+        <div className="flex gap-2">
+          <TextField
+            required
+            value={userFormData.firstName}
+            id="firstName"
+            name="firstName"
+            label="First Name"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={(e) =>
+              setUserFormData({
+                ...userFormData,
+                firstName: e.target.value,
+              })
+            }
+            disabled={userFormData.isViewMode}
+          />
+          <TextField
+            required
+            value={userFormData.middleName}
+            id="middleName"
+            name="middleName"
+            label="Middle Name"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={(e) =>
+              setUserFormData({
+                ...userFormData,
+                middleName: e.target.value,
+              })
+            }
+            disabled={userFormData.isViewMode}
+          />
+          <TextField
+            required
+            value={userFormData.lastName}
+            id="lastName"
+            name="lastName"
+            label="Last Name"
+            type="text"
+            fullWidth
+            variant="standard"
+            onChange={(e) =>
+              setUserFormData({ ...userFormData, lastName: e.target.value })
+            }
+            disabled={userFormData.isViewMode}
+          />
+        </div>
+        <TextField
+          required
+          autoComplete="new-email"
+          value={userFormData.email}
+          id="email"
+          name="email"
+          label="Email"
+          type="email"
+          fullWidth
+          variant="standard"
+          error={emailError}
+          helperText={emailError ? "Not Valid" : ""}
+          onChange={(e) => {
+            setEmailError(false);
+            setUserFormData({ ...userFormData, email: e.target.value });
+          }}
+          onBlur={(e) => {
+            if (
+              !/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(e.target.value.trim())
+            ) {
+              setEmailError(true);
+            }
+          }}
+          disabled={userFormData.isViewMode}
+        />
+        <TextField
+          required
+          value={userFormData.contactPhone}
+          id="contactPhone"
+          name="contactPhone"
+          label="Contact Number"
+          type="text"
+          fullWidth
+          variant="standard"
+          error={phoneError}
+          helperText={
+            phoneError && "Please enter valid 10 digit contact number"
+          }
+          onChange={(e) => {
+            setPhoneError(false);
+            if (e.target.value.length > 10) {
+              return;
+            } else if (!/^[0-9\s]*$/.test(e.target.value)) {
+              return;
+            } else {
+              setUserFormData({
+                ...userFormData,
+                contactPhone: e.target.value,
+              });
+            }
+          }}
+          disabled={userFormData.isViewMode}
+        />
+        <RadioGroup
+          className={`!flex !flex-row !gap-2 select-none ${
+            userFormData.id > 0 ? "pointer-events-none opacity-50" : ""
+          }`}
+          value={userFormData.roleId}
+          onChange={(e) =>
+            setUserFormData({ ...userFormData, roleId: e.target.value })
+          }
+        >
+          <FormControlLabel
+            disabled={userFormData.isViewMode}
+            value="1"
+            control={<Radio />}
+            label="Admin"
+          />
+          <FormControlLabel
+            disabled={userFormData.isViewMode}
+            value="2"
+            control={<Radio />}
+            label="Candidate"
+          />
+        </RadioGroup>
+        {userFormData.roleId === "1" && (
+          <TextField
+            autoComplete="new-password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            required
+            value={userFormData.password}
+            error={pwdErr}
+            helperText={
+              pwdErr &&
+              "Password must be a minimum of eight characters and include a mix of numbers, uppercase, lowercase letters, and special characters."
+            }
+            onChange={(e) => {
+              setPwdErr(false);
+              setUserFormData({ ...userFormData, password: e.target.value });
+            }}
+            label="Password"
+            variant="standard"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPassword(!showPassword)}>
+                    {!showPassword ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button color="error" onClick={handleClose}>
+          Cancel
+        </Button>
+        <Button type="submit">Submit</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+type HeaderComponent = {
+  setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+const HeaderComponent = ({ setDialogOpen }: HeaderComponent) => {
+  return (
+    <div className="flex-row flex flex-wrap pb-2 justify-between w-full">
+      <div className="justify-between flex flex-wrap w-full">
+        <div className="justify-start flex items-center font-semibold">
+          Manage Users
+        </div>
+
+        <Button
+          className="flex gap-2"
+          variant="contained"
+          onClick={() => setDialogOpen(true)}
+        >
+          Add User <Add className="text-sm" />
+        </Button>
+      </div>
     </div>
   );
 };

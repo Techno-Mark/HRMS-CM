@@ -63,6 +63,7 @@ const Page = () => {
     {
       field: "documentName",
       headerName: "Document Name",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -76,6 +77,7 @@ const Page = () => {
     {
       field: "isActive",
       headerName: "Status",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
@@ -95,6 +97,7 @@ const Page = () => {
     {
       field: "isMandatory",
       headerName: "Required",
+      sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">

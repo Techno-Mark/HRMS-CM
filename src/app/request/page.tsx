@@ -9,6 +9,7 @@ import {
   IconButton,
   LinearProgress,
   CircularProgress,
+  Tooltip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { toastOptions } from "@/static/toastOptions";
@@ -17,9 +18,10 @@ import Header from "@/components/Header";
 import { validateFile } from "@/utils/validateFile";
 import {
   callAPIwithHeadersForRequest,
-  callAPIwithParams,
+  callAPIwithParamswithoutToken,
   callAPIwithoutHeaders,
 } from "@/api/commonAPI";
+import Close from "@mui/icons-material/Close";
 
 export default function Home() {
   const getToken = useSearchParams();
@@ -205,12 +207,35 @@ export default function Home() {
       }
     };
 
-    callAPIwithParams(
+    callAPIwithParamswithoutToken(
       "/Document/GetUserDocuments",
       "post",
       callBack,
       {},
       { name: "UserId", value: id }
+    );
+  };
+
+  const deleteDocument = (id: string) => {
+    const callBack = async (status: boolean, message: string, data: any) => {
+      if (status) {
+        toast.success(message);
+        if (sessionStorage.getItem("userInfo")) {
+          getDocumentsList(JSON.parse(sessionStorage.getItem("userInfo")!).id);
+        } else {
+          toast.error("Something went wrong, please try again.");
+        }
+      } else {
+        toast.error(message);
+      }
+    };
+
+    callAPIwithParamswithoutToken(
+      "/Document/DeleteDocument",
+      "post",
+      callBack,
+      {},
+      { name: "DocumentUserId", value: id }
     );
   };
 
@@ -234,7 +259,7 @@ export default function Home() {
       },
     },
     {
-      field: "file_upload",
+      field: "uploadedDocumentName",
       sortable: false,
       renderHeader: () => (
         <span className="capitalize font-bold text-xs text-[#535255]">
@@ -248,17 +273,23 @@ export default function Home() {
         const fileTypeErr1 = fileTypeErrMap[id] || "";
         const status = statusMap[id] || "Pending";
         return (
-          <>
-            <div className="h-full w-full flex flex-wrap items-center justify-center text-center">
-              <div
-                className={`${
-                  fileTypeErr1 ? "h-8" : "!h-10"
-                } border-2 border-dotted bg-gray-100 ${
-                  (alert === 2 && highlightedRows.includes(id)) || fileTypeErr1
-                    ? `border-red-600`
-                    : `border-gray-300`
-                } rounded-full w-full overflow-hidden flex justify-center items-center`}
-              >
+          <div
+            className={`h-full w-full flex flex-wrap items-center justify-center text-center ${
+              params.row.statusDescription === "Accepted"
+                ? "pointer-events-none opacity-50"
+                : ""
+            } `}
+          >
+            <div
+              className={`${
+                fileTypeErr1 ? "h-8" : "!h-10"
+              } border-2 border-dotted bg-gray-100 ${
+                (alert === 2 && highlightedRows.includes(id)) || fileTypeErr1
+                  ? `border-red-600`
+                  : `border-gray-300`
+              } rounded-full w-full overflow-hidden flex justify-center items-center`}
+            >
+              {params.value === null ? (
                 <span>
                   {fileName1 !== "" ? (
                     <span className="text-center justify-center items-center w-full flex text-xs font-normal text-[#333] p-2">
@@ -287,7 +318,7 @@ export default function Home() {
                           <div {...getRootProps()}>
                             <input {...getInputProps()} />
                             <span
-                              className={`select-none justify-center items-center text-center text-xs font-normal text-[#333] p-2`}
+                              className={`cursor-pointer select-none justify-center items-center text-center text-xs font-normal text-[#333] p-2`}
                             >
                               <AttachmentIcon className="mr-[4px] text-[15px] text-[#808080]" />
                               Drag and drop or&nbsp;
@@ -302,23 +333,39 @@ export default function Home() {
                     </Dropzone>
                   )}
                 </span>
-              </div>
-              <div className="-mt-5">
-                {fileTypeErr1 === true ? (
-                  <span className="text-red-600 text-[8px]">
-                    File type must be txt, pdf, xlsx,xls, csv, doc, docx, rpt
-                    and prn
-                  </span>
-                ) : fileTypeErr1 === -1 ? (
-                  <span className="text-red-600 text-[8px]">
-                    File size shouldn&apos;t be more than 100MB
-                  </span>
-                ) : (
-                  <></>
-                )}
-              </div>
+              ) : (
+                <div className="flex items-center gap-2 ">
+                  <span>{params.value}</span>
+                  {!(params.row.statusDescription === "Accepted") && (
+                    <Tooltip title="Delete">
+                      <span
+                        className="cursor-pointer"
+                        onClick={() =>
+                          deleteDocument(params.row.documentUserId)
+                        }
+                      >
+                        <Close fontSize="small" />
+                      </span>
+                    </Tooltip>
+                  )}
+                </div>
+              )}
             </div>
-          </>
+            <div className="-mt-5">
+              {fileTypeErr1 === true ? (
+                <span className="text-red-600 text-[8px]">
+                  File type must be txt, pdf, xlsx,xls, csv, doc, docx, rpt and
+                  prn
+                </span>
+              ) : fileTypeErr1 === -1 ? (
+                <span className="text-red-600 text-[8px]">
+                  File size shouldn&apos;t be more than 100MB
+                </span>
+              ) : (
+                <></>
+              )}
+            </div>
+          </div>
         );
       },
     },
@@ -340,7 +387,7 @@ export default function Home() {
       },
     },
     {
-      field: "status",
+      field: "statusDescription",
       sortable: false,
       renderHeader: (params) => (
         <span className="capitalize font-bold text-xs text-[#535255]">
