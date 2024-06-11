@@ -12,7 +12,7 @@ import {
   TextField,
 } from "@mui/material";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
 const Page = () => {
@@ -145,6 +145,7 @@ const Page = () => {
                   setDialogOpen(true);
                 }}
                 onDelete={() => {}}
+                onOutsideClick={() => setmoreActionsClickedRowId(-1)}
               />
             )}
           </div>
@@ -339,10 +340,25 @@ const Form = ({
   );
 };
 
-const MoreActions = ({ onEdit, onDelete }: any) => {
-  const actions = ["edit", "delete"];
+const MoreActions = ({ onEdit, onDelete, onOutsideClick }: any) => {
+  const divRef = useRef<any>(null);
+  const actions = ["edit"]; //"delete"
   const actionStyle =
     "flex capitalize text-sm px-6 py-1 cursor-pointer hover:bg-slate-100";
+
+  useEffect(() => {
+    const handleOutSideClick = (event: any) => {
+      if (!divRef.current?.contains(event.target)) {
+        onOutsideClick();
+      }
+    };
+
+    window.addEventListener("mousedown", handleOutSideClick);
+
+    return () => {
+      window.removeEventListener("mousedown", handleOutSideClick);
+    };
+  }, [divRef]);
 
   const getStatus = (action: string) => {
     switch (action.toLowerCase()) {
@@ -360,6 +376,7 @@ const MoreActions = ({ onEdit, onDelete }: any) => {
 
   return (
     <div
+      ref={divRef}
       style={{
         boxShadow:
           "0 0 1px 0px rgba(0,0,0,0.30), 0 0 25px 4px rgba(0,0,0,0.22)",

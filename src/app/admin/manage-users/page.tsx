@@ -1,6 +1,6 @@
 "use client";
 //react hooks
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 //3rd party libraries & icons
 import {
   Button,
@@ -24,8 +24,11 @@ import Loader from "@/components/common/Loader";
 // common types, variables & functions
 import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
 import { UserDataType, UserFormDataType } from "@/types/ManageUsers";
+import { toastOptions } from "@/static/toastOptions";
+import LinksDialog from "@/components/LinksDialog";
 
 const Page = () => {
+  const [links, setLinks] = useState<any>([]);
   const [userData, setUserData] = useState<UserDataType[]>([]);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -73,7 +76,7 @@ const Page = () => {
     };
 
     callAPIwithParams(
-      "/User/Users",
+      "/ManageUser/GetManageUser",
       "post",
       callBack,
       {},
@@ -89,16 +92,21 @@ const Page = () => {
 
     const callBack = async (
       status: boolean,
-      message: string
+      message: string,
+      data: { link: string }
     ): Promise<void> => {
       if (status) {
+        setLinks([data.link]);
         setLoaded(true);
         toast.success(message);
         setmoreActionsClickedRowId(-1);
+        getManageUserData("");
       } else {
+        setLinks([]);
         setLoaded(true);
         toast.error(message);
         setmoreActionsClickedRowId(-1);
+        getManageUserData("");
       }
     };
 
@@ -142,9 +150,11 @@ const Page = () => {
       if (status) {
         toast.success(message);
         setLoaded(true);
+        setmoreActionsClickedRowId(-1);
       } else {
         toast.error(message);
         setLoaded(true);
+        setmoreActionsClickedRowId(-1);
       }
     };
 
@@ -278,6 +288,20 @@ const Page = () => {
       },
     },
     {
+      field: "userDocStatus",
+      headerName: "Document Status",
+      sortable: false,
+      flex: 1,
+      renderHeader: (params) => (
+        <span className="capitalize font-semibold text-sm text-[#535255]">
+          Document Status
+        </span>
+      ),
+      renderCell: (params) => {
+        return <div>{params.value}</div>;
+      },
+    },
+    {
       field: "roleId",
       headerName: "Role",
       sortable: false,
@@ -318,6 +342,11 @@ const Page = () => {
 
             {moreActionsClickedRowId === params.row.id && (
               <MoreActions
+                link={params.row.link}
+                isCompleted={
+                  params.row.userDocStatus.toLowerCase() === "completed"
+                }
+                isInvitationSent={params.row.isInvitationSent}
                 onInviteSent={() => sendInvite(params.value)}
                 onView={() => {
                   getManageUserData(params.value, true);
@@ -328,6 +357,7 @@ const Page = () => {
                 onRemind={() => {
                   sendReminder(params.value);
                 }}
+                onOutsideClick={() => setmoreActionsClickedRowId(-1)}
               />
             )}
           </div>
@@ -381,6 +411,13 @@ const Page = () => {
           setShowPassword={setShowPassword}
           setPwdErr={setPwdErr}
         />
+        <LinksDialog
+          links={links}
+          handleClose={() => {
+            setmoreActionsClickedRowId(-1);
+            setLinks([]);
+          }}
+        />
       </Wrapper>
     </>
   );
@@ -393,30 +430,79 @@ type MoreActionsType = {
   onView: () => void;
   onEdit: () => void;
   onRemind: () => void;
+  onOutsideClick: () => void;
+  isInvitationSent: boolean;
+  isCompleted: boolean;
+  link: string | null;
 };
 
 const MoreActions = ({
+  link,
   onInviteSent,
   onView,
   onEdit,
   onRemind,
+  isInvitationSent,
+  isCompleted,
+  onOutsideClick,
 }: MoreActionsType) => {
-  const actions = ["view", "edit", "send invite", "send reminder"];
+  const divRef = useRef<any>(null);
+  const actions = [
+    "view",
+    "edit",
+    "send invite",
+    "send reminder",
+    "copy invitation link",
+  ];
   const actionStyle =
     "flex capitalize text-sm px-6 py-1 cursor-pointer hover:bg-slate-100";
 
+  useEffect(() => {
+    const handleOutSideClick = (event: any) => {
+      if (!divRef.current?.contains(event.target)) {
+        onOutsideClick();
+      }
+    };
+
+    window.addEventListener("mousedown", handleOutSideClick);
+
+    return () => {
+      window.removeEventListener("mousedown", handleOutSideClick);
+    };
+  }, [divRef]);
+
   return (
     <div
+      ref={divRef}
       style={{
         boxShadow:
           "0 0 1px 0px rgba(0,0,0,0.30), 0 0 25px 4px rgba(0,0,0,0.22)",
       }}
       className="py-2 absolute right-16 bg-white shadow-lg z-10 rounded"
     >
-      {actions.map((action: string) => (
+      {actions.map((action: string, index: number) => (
         <span
           key={action}
-          className={actionStyle}
+          className={`${actionStyle} 
+            ${
+              isCompleted && (index === 4 || index === 3 || index === 2)
+                ? "pointer-events-none opacity-50"
+                : ""
+            }
+            ${
+              index === 4 && !isInvitationSent
+                ? "pointer-events-none opacity-50"
+                : ""
+            }
+            ${
+              index === 3 && !isInvitationSent
+                ? "pointer-events-none opacity-50"
+                : ""
+            } ${
+            index === 2 && isInvitationSent
+              ? "pointer-events-none opacity-50"
+              : ""
+          }`}
           onClick={
             action.toLowerCase() === "send invite"
               ? onInviteSent
@@ -426,6 +512,16 @@ const MoreActions = ({
               ? onEdit
               : action.toLowerCase() === "send reminder"
               ? onRemind
+              : action.toLowerCase() === "copy invitation link"
+              ? async () => {
+                  navigator.clipboard.writeText(
+                    `${process.env.app_url}/request?id=${link}`
+                  );
+                  toast.success(
+                    `Validate Code copied sucessfully`,
+                    toastOptions
+                  );
+                }
               : undefined
           }
         >

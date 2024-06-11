@@ -1,6 +1,6 @@
 "use client";
 //react hooks
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 //3rd party libraries & icons
 import { toast } from "react-toastify";
 import {
@@ -10,7 +10,7 @@ import {
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
 import { Download, MoreVert } from "@mui/icons-material";
-import { Autocomplete, Button, TextField } from "@mui/material";
+import { Autocomplete, Button, ListItemText, TextField } from "@mui/material";
 //custom components
 import Wrapper from "@/components/Wrapper";
 import Loader from "@/components/common/Loader";
@@ -309,11 +309,12 @@ const Page = () => {
             >
               <MoreVert />
             </span>
-            {/* <MoreActions /> */}
+
             {moreActionsClickedRowId === params.row.documentUserId && (
               <MoreActions
                 onAccept={() => updateStatus(5, params.row.documentUserId)}
                 onReject={() => updateStatus(3, params.row.documentUserId)}
+                onOutsideClick={() => setmoreActionsClickedRowId(-1)}
               />
             )}
           </div>
@@ -336,8 +337,15 @@ const Page = () => {
           <Autocomplete
             className="w-[30%]"
             getOptionLabel={(option: any) =>
-              option.firstName + " " + option.lastName
+              option.firstName + " " + option.middleName + " " + option.lastName
             }
+            renderOption={(props, item) => (
+              <li {...props} key={item.id}>
+                <ListItemText>
+                  {item.firstName}&nbsp;{item.middleName}&nbsp;{item.lastName}
+                </ListItemText>
+              </li>
+            )}
             options={userData.map((data) => data)}
             getOptionKey={(option: any) => option.id}
             renderInput={(params) => (
@@ -364,7 +372,9 @@ const Page = () => {
                     userId: userName!.id,
                     documentName: body,
                   },
-                  `${userName!.firstName}_${userName!.lastName}`
+                  `${userName!.firstName}_${userName!.middleName}_${
+                    userName!.lastName
+                  }`
                 );
               }}
             >
@@ -410,7 +420,8 @@ const Page = () => {
 
 export default Page;
 
-const MoreActions = ({ onAccept, onReject }: any) => {
+const MoreActions = ({ onAccept, onReject, onOutsideClick }: any) => {
+  const divRef = useRef<any>(null);
   const actions = ["accept", "reject"];
   const actionStyle =
     "flex capitalize text-sm px-6 py-1 cursor-pointer hover:bg-slate-100";
@@ -429,8 +440,23 @@ const MoreActions = ({ onAccept, onReject }: any) => {
     }
   };
 
+  useEffect(() => {
+    const handleOutSideClick = (event: any) => {
+      if (!divRef.current?.contains(event.target)) {
+        onOutsideClick();
+      }
+    };
+
+    window.addEventListener("mousedown", handleOutSideClick);
+
+    return () => {
+      window.removeEventListener("mousedown", handleOutSideClick);
+    };
+  }, [divRef]);
+
   return (
     <div
+      ref={divRef}
       style={{
         boxShadow:
           "0 0 1px 0px rgba(0,0,0,0.30), 0 0 25px 4px rgba(0,0,0,0.22)",
