@@ -290,9 +290,9 @@ export default function Home() {
               } rounded-full w-full overflow-hidden flex justify-center items-center`}
             >
               {params.value === null ? (
-                <span className="w-full cursor-pointer">
+                <span className="cursor-pointer">
                   {fileName1 !== "" ? (
-                    <span className="text-center justify-center items-center w-full flex text-xs font-normal text-[#333] p-2">
+                    <span className="text-center justify-center items-center w-full flex flex-col text-xs font-normal text-[#333] p-2">
                       {isUploading && status === "Pending" ? (
                         <div className="w-5/6">
                           <span>Uploading..</span>
