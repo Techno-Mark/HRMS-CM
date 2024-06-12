@@ -344,7 +344,8 @@ const Page = () => {
               <MoreActions
                 link={params.row.link}
                 isCompleted={
-                  params.row.userDocStatus.toLowerCase() === "completed"
+                  params.row.userDocStatus.toLowerCase() === "completed" ||
+                  params.row.userDocStatus.toLowerCase() === "submitted"
                 }
                 isInvitationSent={params.row.isInvitationSent}
                 onInviteSent={() => sendInvite(params.value)}
@@ -584,12 +585,12 @@ const UserFormDialog = ({
             type="text"
             fullWidth
             variant="standard"
-            onChange={(e) =>
+            onChange={(e) => {
               setUserFormData({
                 ...userFormData,
-                firstName: e.target.value,
-              })
-            }
+                firstName: e.target.value.trim(),
+              });
+            }}
             disabled={userFormData.isViewMode}
           />
           <TextField
@@ -604,7 +605,7 @@ const UserFormDialog = ({
             onChange={(e) =>
               setUserFormData({
                 ...userFormData,
-                middleName: e.target.value,
+                middleName: e.target.value.trim(),
               })
             }
             disabled={userFormData.isViewMode}
@@ -619,7 +620,10 @@ const UserFormDialog = ({
             fullWidth
             variant="standard"
             onChange={(e) =>
-              setUserFormData({ ...userFormData, lastName: e.target.value })
+              setUserFormData({
+                ...userFormData,
+                lastName: e.target.value.trim(),
+              })
             }
             disabled={userFormData.isViewMode}
           />
@@ -671,7 +675,7 @@ const UserFormDialog = ({
             } else {
               setUserFormData({
                 ...userFormData,
-                contactPhone: e.target.value,
+                contactPhone: e.target.value.trim(),
               });
             }
           }}

@@ -290,7 +290,7 @@ export default function Home() {
               } rounded-full w-full overflow-hidden flex justify-center items-center`}
             >
               {params.value === null ? (
-                <span>
+                <span className="w-full cursor-pointer">
                   {fileName1 !== "" ? (
                     <span className="text-center justify-center items-center w-full flex text-xs font-normal text-[#333] p-2">
                       {isUploading && status === "Pending" ? (
@@ -314,7 +314,7 @@ export default function Home() {
                       }
                     >
                       {({ getRootProps, getInputProps }) => (
-                        <section className="p-1">
+                        <section>
                           <div {...getRootProps()}>
                             <input {...getInputProps()} />
                             <span
@@ -334,7 +334,7 @@ export default function Home() {
                   )}
                 </span>
               ) : (
-                <div className="flex items-center gap-2 ">
+                <div className="flex items-center gap-2">
                   <span>{params.value}</span>
                   {!(params.row.statusDescription === "Accepted") && (
                     <Tooltip title="Delete">
@@ -351,7 +351,7 @@ export default function Home() {
                 </div>
               )}
             </div>
-            <div className="-mt-5">
+            <div className="h-[20px] flex items-center justify-center select-none">
               {fileTypeErr1 === true ? (
                 <span className="text-red-600 text-[8px]">
                   File type must be txt, pdf, xlsx,xls, csv, doc, docx, rpt and
