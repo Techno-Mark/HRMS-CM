@@ -30,7 +30,7 @@ function Page() {
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
   const [documentData, setDocumentData] = useState<DocumentProps[]>([]);
   const [breadCrumbList, setBreadCrumbList] = useState<BreadCrumbListProps[]>([
-    { id: null, label: null },
+    { id: 285, label: "HRDMS" },
   ]);
 
   const getDocuments = async (initialBody: InitialBodyProps): Promise<void> => {
@@ -376,7 +376,7 @@ const HeaderComponent = ({
                 className="!text-[14px] font-semibold capitalize cursor-pointer"
                 onClick={() => handleBreadCrumbClick(index, list)}
               >
-                {list.label ?? "documents"}
+                {list.label === "HRDMS" ? "documents" : list.label}
               </span>
               {index !== breadCrumbList.length - 1 && <ArrowRight />}
             </>
