@@ -30,7 +30,7 @@ function Page() {
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
   const [documentData, setDocumentData] = useState<DocumentProps[]>([]);
   const [breadCrumbList, setBreadCrumbList] = useState<BreadCrumbListProps[]>([
-    { id: 285, label: "HRDMS" },
+    { id: 314, label: "HRDMS" },
   ]);
 
   const getDocuments = async (initialBody: InitialBodyProps): Promise<void> => {
