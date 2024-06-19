@@ -332,8 +332,7 @@ const Page = () => {
   if (loaded)
     return (
       <Wrapper>
-        <div className="mx-5 justify-between flex flex-wrap w-full"></div>
-        <div className="my-2 px-3 flex justify-between">
+        <div className="flex justify-between">
           <Autocomplete
             className="w-[30%]"
             getOptionLabel={(option: any) =>
@@ -393,7 +392,7 @@ const Page = () => {
               disableRowSelectionOnClick
               sx={{
                 fontSize: "12px",
-                height: "70vh",
+                height: "72vh",
                 "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },

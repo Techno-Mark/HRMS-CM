@@ -383,7 +383,7 @@ const Page = () => {
               disableRowSelectionOnClick
               sx={{
                 fontSize: "12px",
-                height: "70vh",
+                height: "72vh",
                 "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },
@@ -749,11 +749,11 @@ type HeaderComponent = {
 
 const HeaderComponent = ({ setDialogOpen }: HeaderComponent) => {
   return (
-    <div className="flex-row flex flex-wrap pb-2 justify-between w-full">
-      <div className="justify-between flex flex-wrap w-full">
-        <div className="justify-start flex items-center font-semibold">
+    <div className="flex-row flex flex-wrap justify-between w-full">
+      <div className="justify-end flex flex-wrap w-full">
+        {/* <div className="justify-start flex items-center font-semibold">
           Manage Users
-        </div>
+        </div> */}
 
         <Button
           className="flex gap-2"

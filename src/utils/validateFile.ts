@@ -8,6 +8,9 @@ const allowedExtensions = [
   "docx",
   "rpt",
   "prn",
+  "jpeg",
+  "png",
+  "jpg"
 ];
 
 export const validateFile = (file: File, type: number) => {

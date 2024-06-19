@@ -59,7 +59,8 @@ const Wrapper = ({ isScrollable, children }: WrapperPropsType) => {
               component="main"
               sx={{
                 flexGrow: 1,
-                p: 3,
+                pt: 2,
+                px: 3,
                 width: { sm: `calc(100% - ${drawerWidth}px)` },
               }}
             >
@@ -68,7 +69,6 @@ const Wrapper = ({ isScrollable, children }: WrapperPropsType) => {
             </Box>
           </Box>
         </div>
-        {/* <Footer /> */}
       </>
     );
 };

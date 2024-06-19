@@ -14,7 +14,7 @@ const Header = () => {
         height="250px"
         preserveAspectRatio="none"
       />
-      <image xlinkHref="full_image.png" x="100" y="25" width="200" height="80" />
+      <image xlinkHref="full_image_color.png" x="100" y="25" width="200" height="80" />
       <path
         opacity="0.6"
         d="M0 0H1440V134H0V0Z"

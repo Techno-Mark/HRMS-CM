@@ -89,19 +89,19 @@ const Page = () => {
           <div
             className={`${params.value ? "text-green-600" : "text-red-600"}`}
           >
-            {params.value ? "Active" : "Deactive"}
+            {params.value ? "Active" : "Inactive"}
           </div>
         );
       },
     },
     {
       field: "isMandatory",
-      headerName: "Required",
+      headerName: "Mandatory",
       sortable: false,
       flex: 1,
       renderHeader: (params) => (
         <span className="capitalize font-semibold text-sm text-[#535255]">
-          Required
+          Mandatory
         </span>
       ),
       renderCell: (params) => {
@@ -139,8 +139,8 @@ const Page = () => {
                     ...formData,
                     documentId: params.value,
                     documentName: params.row.documentName,
-                    isActive: true,
-                    isMandatory: true,
+                    isActive: params.row.isActive,
+                    isMandatory: params.row.isMandatory,
                   });
                   setDialogOpen(true);
                 }}
@@ -176,11 +176,11 @@ const Page = () => {
 
   return (
     <Wrapper>
-      <div className="flex-row flex flex-wrap pb-2 justify-between w-full">
-        <div className="justify-between flex flex-wrap w-full">
-          <div className="justify-start flex items-center font-semibold">
+      <div className="flex-row flex flex-wrap justify-between w-full">
+        <div className="justify-end flex flex-wrap w-full">
+          {/* <div className="justify-start flex items-center font-semibold">
             Manage Document
-          </div>
+          </div> */}
 
           <Button
             className="flex gap-2"
@@ -198,7 +198,7 @@ const Page = () => {
             disableRowSelectionOnClick
             sx={{
               fontSize: "12px",
-              height: "70vh",
+              height: "72vh",
               "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
                 outline: "none !important",
               },
@@ -236,6 +236,12 @@ const Form = ({
     { label: "Yes", value: true },
     { label: "No", value: false },
   ];
+
+  const statusOptions = [
+    { label: "Active", value: true },
+    { label: "Inactive", value: false },
+  ];
+
   return (
     <>
       <Dialog
@@ -294,9 +300,11 @@ const Form = ({
           />
           <Autocomplete
             disableClearable
-            options={options}
+            options={statusOptions}
             value={
-              options.filter((item) => item.value === formData.isActive)[0]
+              statusOptions.filter(
+                (item) => item.value === formData.isActive
+              )[0]
             }
             onChange={(e, record: any) => {
               if (record !== null) {
@@ -314,7 +322,7 @@ const Form = ({
             renderInput={(params) => (
               <TextField
                 {...params}
-                label="Active"
+                label="Status"
                 variant="standard"
                 required
               />

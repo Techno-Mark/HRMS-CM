@@ -161,8 +161,8 @@ const Sidebar = ({
                   // }}
                   alt="logo1"
                   src={"/full_image.png"}
-                  width={130}
-                  height={30}
+                  width={150}
+                  height={50}
                 />
               ) : (
                 <Image
@@ -172,8 +172,8 @@ const Sidebar = ({
                   // }}
                   alt="logo"
                   src={"/short_image.png"}
-                  width={20}
-                  height={30}
+                  width={40}
+                  height={40}
                 />
               )}
             </ListItemButton>

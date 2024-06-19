@@ -30,7 +30,7 @@ function Page() {
   const [rowsPerPage, setRowsPerPage] = useState<number>(10);
   const [documentData, setDocumentData] = useState<DocumentProps[]>([]);
   const [breadCrumbList, setBreadCrumbList] = useState<BreadCrumbListProps[]>([
-    { id: 314, label: "HRDMS" },
+    { id: initialBody.id, label: initialBody.folderName },
   ]);
 
   const getDocuments = async (initialBody: InitialBodyProps): Promise<void> => {
@@ -318,7 +318,7 @@ function Page() {
               disableRowSelectionOnClick
               sx={{
                 fontSize: "12px",
-                height: "70vh",
+                height: "72vh",
                 "&.MuiDataGrid-root .MuiDataGrid-cell:focus-within": {
                   outline: "none !important",
                 },
@@ -366,7 +366,7 @@ const HeaderComponent = ({
   handleSearch,
 }: HeaderComponentProps) => {
   return (
-    <div className="flex-row flex flex-wrap pb-2 justify-between w-full">
+    <div className="flex-row flex flex-wrap justify-between w-full">
       <div className="justify-between flex flex-wrap w-full">
         {/* Bread Crumb */}
         <div className="justify-start flex items-center w-[70%] flex-wrap">
@@ -376,7 +376,7 @@ const HeaderComponent = ({
                 className="!text-[14px] font-semibold capitalize cursor-pointer"
                 onClick={() => handleBreadCrumbClick(index, list)}
               >
-                {list.label === "HRDMS" ? "documents" : list.label}
+                {list.label}
               </span>
               {index !== breadCrumbList.length - 1 && <ArrowRight />}
             </>

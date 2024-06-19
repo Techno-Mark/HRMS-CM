@@ -101,12 +101,14 @@ const Header = ({ openSidebar }: HeaderPropsType) => {
         </IconButton>
         <div className="flex flex-row w-full justify-between items-center">
           <div className="!text-[#000000]">
-            <span className="!font-bold text-lg">
-              {url.includes("setting")
-                ? "Report Characteristics"
-                : url.includes("audit")
-                ? "TPA RecordKeeper Report Analyzer"
-                : "Audit Document Tracking"}
+            <span className="!font-bold text-lg capitalize">
+              {url.includes("manage-document")
+                ? "Manage Document"
+                : url.includes("manage-users")
+                ? "Manage Users"
+                : url.includes("controlpanel")
+                ? "Control Panel"
+                : url[url.length - 1]}
             </span>
           </div>
           <div className="relative flex gap-[30px]">
