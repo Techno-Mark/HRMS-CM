@@ -22,6 +22,7 @@ const Page = () => {
   const [formData, setFormData] = useState({
     documentId: null,
     documentName: "",
+    description: "",
     isActive: false,
     isMandatory: false,
   });
@@ -32,7 +33,9 @@ const Page = () => {
     const callBack = async (status: boolean, message: string, data: any) => {
       if (status) {
         handleDialogClose();
-        toast.success(message);
+        toast.success(
+          !formData.documentId ? message : "Document updated successfully"
+        );
         getFormData("");
       } else {
         handleDialogClose();
@@ -54,6 +57,7 @@ const Page = () => {
     setFormData({
       documentId: null,
       documentName: "",
+      description: "",
       isActive: false,
       isMandatory: false,
     });
@@ -139,6 +143,7 @@ const Page = () => {
                     ...formData,
                     documentId: params.value,
                     documentName: params.row.documentName,
+                    description: params.row.description,
                     isActive: params.row.isActive,
                     isMandatory: params.row.isMandatory,
                   });
@@ -333,9 +338,14 @@ const Form = ({
             className="w-full p-2 border resize-none outline-none rounded-md"
             rows={4}
             id="description"
-          >
-            {formData.description}
-          </textarea>
+            value={formData.description}
+            onChange={(e) =>
+              setFormData((formData: any) => ({
+                ...formData,
+                description: e.target.value,
+              }))
+            }
+          ></textarea>
         </DialogContent>
         <DialogActions>
           <Button color="error" onClick={handleClose}>

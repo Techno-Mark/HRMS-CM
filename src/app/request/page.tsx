@@ -22,6 +22,7 @@ import {
   callAPIwithoutHeaders,
 } from "@/api/commonAPI";
 import Close from "@mui/icons-material/Close";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   const getToken = useSearchParams();
@@ -460,7 +461,7 @@ export default function Home() {
           <div className={`mx-auto my-4 flex flex-col px-4 w-full mb-4`}>
             <div
               style={{
-                height: `calc(100vh - 127px - 40px)`,
+                height: `calc(100vh - 127px - 90px)`,
               }}
             >
               <DataGrid
@@ -480,6 +481,7 @@ export default function Home() {
           <CircularProgress size={40} className="text-[#223E99]" />
         </span>
       )}
+      <Footer />
     </div>
   );
 }
