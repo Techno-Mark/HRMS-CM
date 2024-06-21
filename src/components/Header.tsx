@@ -14,9 +14,9 @@ const Header = () => {
       />
       <image
         xlinkHref="final_full_image_white.png"
-        x="100"
+        x="10"
         y="25"
-        width="200"
+        width="300"
         height="80"
       />
       <path
