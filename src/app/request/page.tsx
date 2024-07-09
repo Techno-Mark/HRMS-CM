@@ -354,12 +354,11 @@ export default function Home() {
             </div>
             <div className="h-[20px] flex items-center justify-center select-none">
               {fileTypeErr1 === true ? (
-                <span className="text-red-600 text-[8px]">
-                  File type must be txt, pdf, xlsx, xls, csv, doc, docx, jpg,
-                  jpeg, png, rpt and prn
+                <span className="text-red-600 text-[9px]">
+                  File type must be pdf, jpg or jpeg
                 </span>
               ) : fileTypeErr1 === -1 ? (
-                <span className="text-red-600 text-[8px]">
+                <span className="text-red-600 text-[9px]">
                   File size shouldn&apos;t be more than 100MB
                 </span>
               ) : (

@@ -1,15 +1,6 @@
 const allowedExtensions = [
   "pdf",
-  "txt",
-  "xlsx",
-  "xls",
-  "csv",
-  "doc",
-  "docx",
-  "rpt",
-  "prn",
   "jpeg",
-  "png",
   "jpg"
 ];
 
