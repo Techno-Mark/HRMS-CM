@@ -43,12 +43,6 @@ export default function Home() {
 
   useEffect(() => {
     verifyToken(tokenData);
-    // if (sessionStorage.getItem("userInfo")) {
-    //   setValidated(true);
-    //   getDocumentsList(JSON.parse(sessionStorage.getItem("userInfo")!).id);
-    // } else {
-    //   setValidated(false);
-    // }
   }, []);
 
   useEffect(() => {
@@ -355,7 +349,7 @@ export default function Home() {
             <div className="h-[20px] flex items-center justify-center select-none">
               {fileTypeErr1 === true ? (
                 <span className="text-red-600 text-[9px]">
-                  File type must be pdf, jpg or jpeg
+                  File type must be pdf, png, jpg or jpeg
                 </span>
               ) : fileTypeErr1 === -1 ? (
                 <span className="text-red-600 text-[9px]">

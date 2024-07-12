@@ -1,7 +1,7 @@
 const allowedExtensions = [
   "pdf",
   "jpeg",
-  "jpg"
+  "jpg", "png"
 ];
 
 export const validateFile = (file: File, type: number) => {
