@@ -375,7 +375,7 @@ export default function Home() {
       renderCell: (params) => {
         return (
           <span className="text-xs font-normal text-[#333]">
-            {params.value.split("T")[0]}
+            {!!params.value ? params.value.split("T")[0] : "-"}
           </span>
         );
       },

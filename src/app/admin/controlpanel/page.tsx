@@ -93,7 +93,11 @@ const Page = () => {
     });
   };
 
-  const handleDownload = (fileLink: string, fileName: string) => {
+  const handleDownload = (
+    fileLink: string,
+    fileName: string,
+    docUserId: number
+  ) => {
     setLoaded(false);
     const callBack = (status: boolean, message: string, data: any) => {
       if (status) {
@@ -106,13 +110,10 @@ const Page = () => {
       }
     };
 
-    callAPIwithParams(
-      "/Document/DownloadFile",
-      "post",
-      callBack,
-      {},
-      { name: "FileLink", value: fileLink }
-    );
+    callAPIwithHeaders("/Document/DownloadFile", "post", callBack, {
+      fileLink: fileLink,
+      documentUserId: docUserId,
+    });
   };
 
   const handleDownloadInBulk = (params: any, filename: string) => {
@@ -235,7 +236,11 @@ const Page = () => {
                 : "cursor-pointer"
             }`}
             onClick={() =>
-              handleDownload(params.value, params.row.uploadedDocumentName)
+              handleDownload(
+                params.value,
+                params.row.uploadedDocumentName,
+                params.row.documentUserId
+              )
             }
           >
             <Download />

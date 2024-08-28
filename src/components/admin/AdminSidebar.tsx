@@ -31,11 +31,11 @@ import { drawerWidth } from "@/static/commonVariables";
 import { UploadFile } from "@mui/icons-material";
 
 export const sidebarItems = [
-  {
-    module: "Documents",
-    link: "/admin/documents",
-    icon: <Documents />,
-  },
+  // {
+  //   module: "Documents",
+  //   link: "/admin/documents",
+  //   icon: <Documents />,
+  // },
   {
     module: "Manage Users",
     link: "/admin/manage-users",
