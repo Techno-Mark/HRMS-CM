@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "react-toastify";
 import Dropzone from "react-dropzone";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -25,6 +25,7 @@ import Close from "@mui/icons-material/Close";
 import Footer from "@/components/Footer";
 
 export default function Home() {
+  const router = useRouter();
   const getToken = useSearchParams();
   const tokenData = getToken.get("id");
   const [loaded, setLoaded] = useState<boolean>(false);
@@ -68,8 +69,9 @@ export default function Home() {
         getDocumentsList(data[0].id);
         sessionStorage.setItem("userInfo", JSON.stringify(data[0]));
       } else {
-        setLoaded(true);
+        router.push("/pagenotfound");
         setValidated(false);
+        setLoaded(true);
       }
     };
 

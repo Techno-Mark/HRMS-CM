@@ -134,7 +134,7 @@ const Page = () => {
           <span className="absolute top-4 left-16">
             <Image
               alt="logo1"
-              src={"/full_image_color.png"}
+              src={"/final_full_image_blue.png"}
               width={200}
               height={50}
             />

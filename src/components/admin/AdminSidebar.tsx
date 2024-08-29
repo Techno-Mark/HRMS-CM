@@ -160,7 +160,7 @@ const Sidebar = ({
                   //     "brightness(0) saturate(100%) invert(100%) sepia(100%) hue-rotate(200deg)",
                   // }}
                   alt="logo1"
-                  src={"/full_image.png"}
+                  src={"/final_full_image_white.png"}
                   width={150}
                   height={50}
                 />
