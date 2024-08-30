@@ -52,6 +52,8 @@ const DocumentStatusOptions = [
   { value: 2, label: "Completed" },
 ];
 
+const RESET_FILTER = "reset";
+
 const Page = () => {
   const [links, setLinks] = useState<any>([]);
   const [userData, setUserData] = useState<UserDataType[]>([]);
@@ -94,7 +96,7 @@ const Page = () => {
       data: any
     ): Promise<void> => {
       if (status) {
-        if (!userId) {
+        if (!userId || userId === RESET_FILTER) {
           setLoaded(true);
           setUserData(data);
         } else {
@@ -113,15 +115,30 @@ const Page = () => {
       }
     };
 
-    callAPIwithHeaders("/ManageUser/GetManageUser", "post", callBack, {
-      userId: !userId ? null : userId,
-      roleId: !filter.roleId ? null : filter.roleId,
-      search: isViewMode || !filter.search ? null : filter.search,
-      activeStatus:
-        filter.activeStatus === null ? null : Boolean(filter.activeStatus),
-      DocumentStatus:
-        filter.DocumentStatus === null ? null : filter.DocumentStatus,
-    });
+    callAPIwithHeaders(
+      "/ManageUser/GetManageUser",
+      "post",
+      callBack,
+      userId === RESET_FILTER
+        ? {
+            userId: null,
+            roleId: null,
+            search: null,
+            activeStatus: null,
+            DocumentStatus: null,
+          }
+        : {
+            userId: !userId ? null : userId,
+            roleId: !filter.roleId ? null : filter.roleId,
+            search: isViewMode || !filter.search ? null : filter.search,
+            activeStatus:
+              filter.activeStatus === null
+                ? null
+                : Boolean(filter.activeStatus),
+            DocumentStatus:
+              filter.DocumentStatus === null ? null : filter.DocumentStatus,
+          }
+    );
   };
 
   const sendInvite = (id: number): void => {
@@ -195,6 +212,7 @@ const Page = () => {
   };
 
   const sendReminder = (userId: string): void => {
+    setLoaded(false);
     const callBack = async (
       status: boolean,
       message: string
@@ -503,7 +521,9 @@ const Page = () => {
           isFilterOpen={filterOpen}
           filter={filter}
           setFilter={setFilter}
-          handleSubmit={() => getManageUserData("")}
+          handleSubmit={(isReseting: boolean) =>
+            isReseting ? getManageUserData(RESET_FILTER) : getManageUserData("")
+          }
         />
         <LinksDialog
           links={links}
@@ -997,6 +1017,8 @@ const FilterPopup = ({
       activeStatus: null,
       DocumentStatus: null,
     });
+    handleSubmit(true);
+    setFilterOpen(false);
   };
 
   return (
@@ -1048,7 +1070,7 @@ const FilterPopup = ({
         <Button
           type="button"
           onClick={() => {
-            handleSubmit();
+            handleSubmit(false);
             setFilterOpen(false);
           }}
         >

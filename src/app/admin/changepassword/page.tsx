@@ -10,7 +10,7 @@ import { initialFieldStringValues } from "@/static/commonVariables";
 import { StringFieldType } from "@/types/Login";
 import Loader from "@/components/common/Loader";
 import Cookies from "js-cookie";
-import { callAPIwithHeaders, callAPIwithoutHeaders } from "@/api/commonAPI";
+import { callAPIwithHeaders } from "@/api/commonAPI";
 import Wrapper from "@/components/Wrapper";
 
 const Page = () => {
@@ -19,8 +19,11 @@ const Page = () => {
   const searchParams = useSearchParams();
   const linkID = searchParams.get("id");
   const [loading, setLoading] = useState<boolean>(false);
-  const [showPassword, setShowPassword] = useState(false);
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [showCNFPassword, setShowCNFPassword] = useState(false);
+
   const [currentPwd, setCurrentPwd] = useState<StringFieldType>(
     initialFieldStringValues
   );
@@ -151,7 +154,7 @@ const Page = () => {
               <div>
                 <TextField
                   name="password"
-                  type="password"
+                  type={showCurrentPassword ? "text" : "password"}
                   className="w-[356px] lg:w-[356px] !mb-2"
                   id="outlined-basic"
                   value={currentPwd.value}
@@ -165,12 +168,29 @@ const Page = () => {
                   }
                   label="Current Password*"
                   variant="outlined"
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() =>
+                            setShowCurrentPassword(!showCurrentPassword)
+                          }
+                        >
+                          {!showCurrentPassword ? (
+                            <Visibility />
+                          ) : (
+                            <VisibilityOff />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </div>
               <div>
                 <TextField
                   name="password"
-                  type={showPassword ? "text" : "password"}
+                  type={showNewPassword ? "text" : "password"}
                   className="w-[300px] lg:w-[356px] !mb-2"
                   id="outlined-basic"
                   value={password.value}
@@ -183,9 +203,13 @@ const Page = () => {
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
+                          onClick={() => setShowNewPassword(!showNewPassword)}
                         >
-                          {!showPassword ? <Visibility /> : <VisibilityOff />}
+                          {!showNewPassword ? (
+                            <Visibility />
+                          ) : (
+                            <VisibilityOff />
+                          )}
                         </IconButton>
                       </InputAdornment>
                     ),

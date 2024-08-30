@@ -341,12 +341,17 @@ const Page = () => {
           <Autocomplete
             className="w-[30%]"
             getOptionLabel={(option: any) =>
-              option.firstName + " " + option.middleName + " " + option.lastName
+              option.firstName +
+              " " +
+              `${!!option.middleName ? `${option.middleName} ` : ""}` +
+              option.lastName
             }
             renderOption={(props, item) => (
               <li {...props} key={item.id}>
                 <ListItemText>
-                  {item.firstName}&nbsp;{item.middleName}&nbsp;{item.lastName}
+                  {item.firstName}&nbsp;
+                  {!!item.middleName ? `${item.middleName} ` : ""}
+                  {item.lastName}
                 </ListItemText>
               </li>
             )}
