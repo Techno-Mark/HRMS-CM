@@ -341,17 +341,24 @@ const Page = () => {
           <Autocomplete
             className="w-[30%]"
             getOptionLabel={(option: any) =>
-              option.firstName +
-              " " +
-              `${!!option.middleName ? `${option.middleName} ` : ""}` +
-              option.lastName
+              [
+                option.firstName ?? "",
+                option.middleName ?? "",
+                option.lastName ?? "",
+              ]
+                .filter(Boolean)
+                .join(" ")
             }
             renderOption={(props, item) => (
               <li {...props} key={item.id}>
                 <ListItemText>
-                  {item.firstName}&nbsp;
-                  {!!item.middleName ? `${item.middleName} ` : ""}
-                  {item.lastName}
+                  {[
+                    item.firstName ?? "",
+                    item.middleName ?? "",
+                    item.lastName ?? "",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
                 </ListItemText>
               </li>
             )}
@@ -381,9 +388,13 @@ const Page = () => {
                     userId: userName!.id,
                     documentName: body,
                   },
-                  `${userName!.firstName}_${userName!.middleName}_${
-                    userName!.lastName
-                  }`
+                  [
+                    userName?.firstName ?? "",
+                    userName?.middleName ?? "",
+                    userName?.lastName ?? "",
+                  ]
+                    .filter(Boolean)
+                    .join("_")
                 );
               }}
             >

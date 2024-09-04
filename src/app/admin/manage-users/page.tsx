@@ -721,7 +721,7 @@ const UserFormDialog = ({
               onChange={(e) => {
                 if (
                   !/^[0-9]*$/.test(e.target.value) ||
-                  e.target.value.length > 4
+                  e.target.value.length > 10
                 ) {
                   return;
                 } else {
@@ -744,10 +744,16 @@ const UserFormDialog = ({
             fullWidth
             variant="standard"
             onChange={(e) => {
-              setUserFormData({
-                ...userFormData,
-                firstName: e.target.value.trim(),
-              });
+              if (e.target.value.length > 20) {
+                return;
+              } else if (!/^[A-Za-z\s]*$/.test(e.target.value)) {
+                return;
+              } else {
+                setUserFormData({
+                  ...userFormData,
+                  firstName: e.target.value.trim(),
+                });
+              }
             }}
             disabled={userFormData.isViewMode}
           />
@@ -761,12 +767,18 @@ const UserFormDialog = ({
               type="text"
               fullWidth
               variant="standard"
-              onChange={(e) =>
-                setUserFormData({
-                  ...userFormData,
-                  middleName: e.target.value.trim(),
-                })
-              }
+              onChange={(e) => {
+                if (e.target.value.length > 20) {
+                  return;
+                } else if (!/^[A-Za-z\s]*$/.test(e.target.value)) {
+                  return;
+                } else {
+                  setUserFormData({
+                    ...userFormData,
+                    middleName: e.target.value.trim(),
+                  });
+                }
+              }}
               disabled={userFormData.isViewMode}
             />
           )}
@@ -779,12 +791,18 @@ const UserFormDialog = ({
             type="text"
             fullWidth
             variant="standard"
-            onChange={(e) =>
-              setUserFormData({
-                ...userFormData,
-                lastName: e.target.value.trim(),
-              })
-            }
+            onChange={(e) => {
+              if (e.target.value.length > 20) {
+                return;
+              } else if (!/^[A-Za-z\s]*$/.test(e.target.value)) {
+                return;
+              } else {
+                setUserFormData({
+                  ...userFormData,
+                  lastName: e.target.value.trim(),
+                });
+              }
+            }}
             disabled={userFormData.isViewMode}
           />
         </div>
@@ -823,9 +841,7 @@ const UserFormDialog = ({
           fullWidth
           variant="standard"
           error={phoneError}
-          helperText={
-            phoneError && "Please enter valid 10 digit contact number"
-          }
+          helperText={phoneError && "Please enter a valid number"}
           onChange={(e) => {
             setPhoneError(false);
             if (e.target.value.length > 10) {

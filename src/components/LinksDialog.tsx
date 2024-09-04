@@ -53,8 +53,7 @@ const LinksDialog = ({ links, handleClose }: LinksDialogProps) => {
                       );
                     }}
                   >
-                    {/* {link.reportGroup}&nbsp;Reports */}
-                    Copy Validate Code
+                    Copy Invite Link
                   </Button>
                   <span className="flex !items-center !justify-center !h-[36px] !w-[15%] !inset-y-0 !bg-gray-200 !rounded-r-sm">
                     <LinkIcon className="text-[#223E99]" />
