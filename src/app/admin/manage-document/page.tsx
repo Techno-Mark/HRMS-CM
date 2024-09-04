@@ -23,8 +23,8 @@ const Page = () => {
     documentId: null,
     documentName: "",
     description: "",
-    isActive: false,
-    isMandatory: false,
+    isActive: true,
+    isMandatory: true,
   });
 
   const addupdateForm = (e: any) => {

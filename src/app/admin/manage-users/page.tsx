@@ -218,7 +218,7 @@ const Page = () => {
       message: string
     ): Promise<void> => {
       if (status) {
-        toast.success(message);
+        toast.success("Reminder sent successfully");
         setLoaded(true);
         setmoreActionsClickedRowId(-1);
       } else {
