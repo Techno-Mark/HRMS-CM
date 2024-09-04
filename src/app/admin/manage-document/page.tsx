@@ -183,10 +183,6 @@ const Page = () => {
     <Wrapper>
       <div className="flex-row flex flex-wrap justify-between w-full">
         <div className="justify-end flex flex-wrap w-full">
-          {/* <div className="justify-start flex items-center font-semibold">
-            Manage Document
-          </div> */}
-
           <Button
             className="flex gap-2"
             variant="contained"
