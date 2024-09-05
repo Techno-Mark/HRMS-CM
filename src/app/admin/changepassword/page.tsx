@@ -34,6 +34,37 @@ const Page = () => {
     initialFieldStringValues
   );
 
+  const isEmpty = (value: string) => value.trim().length === 0;
+
+  const validateIfAnyPasswordFieldEmpty = () => {
+    const validationResults = {
+      currentPwd: false,
+      password: false,
+      cnfpassword: false,
+    };
+
+    validationResults.currentPwd = isEmpty(currentPwd.value);
+    validationResults.password = isEmpty(password.value);
+    validationResults.cnfpassword = isEmpty(cnfpassword.value);
+
+    setCurrentPwd({
+      ...initialFieldStringValues,
+      error: validationResults.currentPwd,
+    });
+
+    setPassword({
+      ...initialFieldStringValues,
+      error: validationResults.password,
+    });
+
+    setCNFPassword({
+      ...initialFieldStringValues,
+      error: validationResults.cnfpassword,
+    });
+
+    return Object.values(validationResults).includes(true);
+  };
+
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     if (Cookies.get("userInfo")) {
       userInfo = JSON.parse(Cookies.get("userInfo") ?? "");
@@ -44,17 +75,9 @@ const Page = () => {
     }
     e.preventDefault();
     setLoading(true);
-    if (password.error || currentPwd.error || cnfpassword.error) {
-      setLoading(false);
-      return;
-    }
-    if (currentPwd.value.trim().length === 0) {
-      setCurrentPwd({ ...initialFieldStringValues, error: true });
-      setLoading(false);
-      return;
-    }
-    if (password.value.trim().length === 0) {
-      setPassword({ ...initialFieldStringValues, error: true });
+
+    validateIfAnyPasswordFieldEmpty();
+    if (validateIfAnyPasswordFieldEmpty()) {
       setLoading(false);
       return;
     }

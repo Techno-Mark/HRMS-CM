@@ -66,8 +66,8 @@ export default function Home() {
       if (status) {
         setLoaded(true);
         setValidated(true);
-        getDocumentsList(data[0].id);
-        sessionStorage.setItem("userInfo", JSON.stringify(data[0]));
+        getDocumentsList(data.id);
+        sessionStorage.setItem("userInfo", JSON.stringify(data));
       } else {
         router.push("/pagenotfound");
         setValidated(false);
