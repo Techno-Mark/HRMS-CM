@@ -731,7 +731,7 @@ const UserFormDialog = ({
                   });
                 }
               }}
-              disabled={userFormData.isViewMode}
+              disabled={userFormData.isViewMode || userFormData.id > 0}
             />
           )}
           <TextField
