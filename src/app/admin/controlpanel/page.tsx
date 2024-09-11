@@ -376,17 +376,24 @@ const Page = () => {
             <Button
               variant="contained"
               onClick={() => {
-                const body = data
+                const documentNames = data
                   .filter((d: any) =>
                     rowSelectionModel.includes(d.documentUserId)
                   )
                   .map((d: any) => d.documentName);
 
+                const documentMasterIds = data
+                  .filter((d: any) =>
+                    rowSelectionModel.includes(d.documentUserId)
+                  )
+                  .map((d: any) => d.documentMasterId);
+
                 handleDownloadInBulk(
                   {
                     email: userName!.email,
                     userId: userName!.id,
-                    documentName: body,
+                    documentName: documentNames,
+                    documentMasterId: documentMasterIds,
                   },
                   [
                     userName?.firstName ?? "",

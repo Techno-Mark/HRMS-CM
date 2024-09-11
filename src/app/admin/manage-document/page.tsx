@@ -43,12 +43,10 @@ const Page = () => {
       }
     };
 
-    callAPIwithHeaders(
-      "/Document/AddUpdateDocument",
-      "post",
-      callBack,
-      formData
-    );
+    callAPIwithHeaders("/Document/AddUpdateDocument", "post", callBack, {
+      ...formData,
+      documentName: formData.documentName.trim(),
+    });
   };
 
   const handleDialogClose = () => {
@@ -264,12 +262,19 @@ const Form = ({
             fullWidth
             value={formData.documentName}
             variant="standard"
-            onChange={(e) =>
-              setFormData((formData: any) => ({
-                ...formData,
-                documentName: e.target.value,
-              }))
-            }
+            onChange={(e) => {
+              if (
+                !/^[^\\/:.*?"<>|]*$/.test(e.target.value) ||
+                e.target.value.length > 30
+              ) {
+                return;
+              } else {
+                setFormData((formData: any) => ({
+                  ...formData,
+                  documentName: e.target.value,
+                }));
+              }
+            }}
           />
           <Autocomplete
             disableClearable
@@ -333,6 +338,8 @@ const Form = ({
             placeholder="Description"
             className="w-full p-2 border resize-none outline-none rounded-md"
             rows={4}
+            minLength={3}
+            maxLength={300}
             id="description"
             value={formData.description}
             onChange={(e) =>
