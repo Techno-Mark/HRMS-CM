@@ -9,8 +9,19 @@ import {
   GridRowParams,
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
-import { Download, MoreVert } from "@mui/icons-material";
-import { Autocomplete, Button, ListItemText, TextField } from "@mui/material";
+import { Close, Download, MoreVert, Title } from "@mui/icons-material";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import {
+  Autocomplete,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  ListItemText,
+  TextField,
+  Tooltip,
+} from "@mui/material";
 //custom components
 import Wrapper from "@/components/Wrapper";
 import Loader from "@/components/common/Loader";
@@ -22,9 +33,28 @@ import {
   UserDropDownType,
   UserTableData,
 } from "@/types/ControlPanel";
+import { Textarea } from "@mui/joy";
+
+const ACCEPT = 5;
+const REJECT = 3;
+
+type MarkAsCompleteConfirmationDialogType = {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+};
+
+type StatusPayloadType = {
+  status: number | null;
+  documentUserId: number | null;
+  userId: number | null;
+  documentName: string[];
+  rejectedReason: string | null;
+};
 
 const Page = () => {
   const [loaded, setLoaded] = useState<boolean>(false);
+
   const [data, setData] = useState<DefaultData[] | UserTableData[]>([]);
   const [userData, setUserData] = useState<UserDropDownType[]>([]);
   const [userName, setUserName] = useState<UserDropDownType | null>(null);
@@ -33,6 +63,19 @@ const Page = () => {
     useState<number>(-1);
   const [rowSelectionModel, setRowSelectionModel] =
     useState<GridRowSelectionModel>([]);
+  const [isRejectionReasonDialogOpen, setRejectionReasonDialogOpen] =
+    useState<boolean>(false);
+  const [allDocAccepted, setAllDocAccepted] = useState<boolean>(false);
+  const [isMarkAsCompleteDialogOpen, setMarkAsCompleteDialogOpen] =
+    useState<boolean>(false);
+
+  const [rejectionBody, setRejectionBody] = useState<StatusPayloadType>({
+    status: null,
+    documentUserId: null,
+    userId: null,
+    documentName: [],
+    rejectedReason: null,
+  });
 
   const getData = (userId: string): void => {
     setLoaded(false);
@@ -42,6 +85,7 @@ const Page = () => {
         if (status) {
           setLoaded(true);
           setData(data);
+          setAllDocAccepted(false);
         }
       };
 
@@ -62,6 +106,13 @@ const Page = () => {
         if (status) {
           setLoaded(true);
           setData(data);
+
+          const isAllAccepted = data.filter(
+            (d: any) =>
+              d.isMandatory && d.statusDescription?.toLowerCase() === "accepted"
+          );
+
+          setAllDocAccepted(data.length === isAllAccepted.length);
         } else {
           setLoaded(true);
         }
@@ -83,6 +134,9 @@ const Page = () => {
       if (status) {
         setLoaded(true);
         setUserData(data);
+        if (!!userName) {
+          setUserName(data.find((item: any) => item.id === userName.id));
+        }
       } else {
         setLoaded(true);
       }
@@ -149,21 +203,47 @@ const Page = () => {
     }
   };
 
-  const updateStatus = (statusId: number, documentUserId: number) => {
+  const updateStatus = (payload: StatusPayloadType) => {
+    setRowSelectionModel([]);
+    setLoaded(false);
     setmoreActionsClickedRowId(-1);
 
     const callBack = (status: boolean, message: string, data: any) => {
       if (status) {
+        if (payload.status === REJECT) {
+          setRejectionReasonDialogOpen(false);
+        }
         getData(!!userName ? String(userName.id) : "");
+        getUserData();
         toast.success(message);
       } else {
         toast.error(message);
       }
+      setLoaded(true);
     };
 
-    callAPIwithHeaders("/Document/ChangeDocumentStatus", "post", callBack, {
-      status: statusId,
-      documentUserId: documentUserId,
+    callAPIwithHeaders(
+      "/Document/ChangeDocumentStatus",
+      "post",
+      callBack,
+      payload
+    );
+  };
+
+  const handleMarkAsComplete = () => {
+    setLoaded(false);
+    const callBack = (status: boolean, message: string) => {
+      setLoaded(true);
+      if (status) {
+        getUserData();
+        toast.success(message);
+        setMarkAsCompleteDialogOpen(false);
+      } else {
+        toast.error(message);
+      }
+    };
+    callAPIwithHeaders("/ManageUser/MarkAsCompleted", "post", callBack, {
+      userId: userName?.id,
     });
   };
 
@@ -211,8 +291,22 @@ const Page = () => {
       ),
       renderCell: (params) => {
         return (
-          <div>
-            {!params.row.statusDescription ? "-" : params.row.statusDescription}
+          <div className="flex items-center gap-1">
+            <span>
+              {!params.row.statusDescription
+                ? "-"
+                : params.row.statusDescription}
+            </span>
+            {params.row.statusDescription?.toLowerCase() === "rejected" && (
+              <Tooltip title={params.row.rejectionNote}>
+                <InfoOutlinedIcon
+                  sx={{
+                    cursor: "pointer",
+                    fontSize: "18px",
+                  }}
+                />
+              </Tooltip>
+            )}
           </div>
         );
       },
@@ -317,8 +411,25 @@ const Page = () => {
 
             {moreActionsClickedRowId === params.row.documentUserId && (
               <MoreActions
-                onAccept={() => updateStatus(5, params.row.documentUserId)}
-                onReject={() => updateStatus(3, params.row.documentUserId)}
+                onAccept={() =>
+                  updateStatus({
+                    status: ACCEPT,
+                    documentUserId: params.row.documentUserId,
+                    userId: params.row.userId,
+                    documentName: [params.row.documentName],
+                    rejectedReason: null,
+                  })
+                }
+                onReject={() => {
+                  setRejectionReasonDialogOpen(true);
+                  setRejectionBody({
+                    status: REJECT,
+                    documentUserId: params.row.documentUserId,
+                    userId: params.row.userId,
+                    documentName: [params.row.documentName],
+                    rejectedReason: "",
+                  });
+                }}
                 onOutsideClick={() => setmoreActionsClickedRowId(-1)}
               />
             )}
@@ -340,6 +451,7 @@ const Page = () => {
         <div className="flex justify-between">
           <Autocomplete
             className="w-[30%]"
+            noOptionsText="No active user found"
             getOptionLabel={(option: any) =>
               [
                 option.firstName ?? "",
@@ -372,49 +484,61 @@ const Page = () => {
               handleRecordChange(record);
             }}
           />
-          {rowSelectionModel.length > 1 && !!userName && (
-            <Button
-              variant="contained"
-              onClick={() => {
-                const documentNames = data
-                  .filter((d: any) =>
-                    rowSelectionModel.includes(d.documentUserId)
-                  )
-                  .map((d: any) => d.documentName);
+          <div className="flex gap-3">
+            {rowSelectionModel.length > 1 && !!userName && (
+              <Button
+                variant="contained"
+                onClick={() => {
+                  const documentNames = data
+                    .filter((d: any) =>
+                      rowSelectionModel.includes(d.documentUserId)
+                    )
+                    .map((d: any) => d.documentName);
 
-                const documentMasterIds = data
-                  .filter((d: any) =>
-                    rowSelectionModel.includes(d.documentUserId)
-                  )
-                  .map((d: any) => d.documentMasterId);
+                  const documentMasterIds = data
+                    .filter((d: any) =>
+                      rowSelectionModel.includes(d.documentUserId)
+                    )
+                    .map((d: any) => d.documentMasterId);
 
-                handleDownloadInBulk(
-                  {
-                    email: userName!.email,
-                    userId: userName!.id,
-                    documentName: documentNames,
-                    documentMasterId: documentMasterIds,
-                  },
-                  [
-                    userName?.firstName ?? "",
-                    userName?.middleName ?? "",
-                    userName?.lastName ?? "",
-                  ]
-                    .filter(Boolean)
-                    .join("_")
-                );
-              }}
-            >
-              Download
-            </Button>
-          )}
+                  handleDownloadInBulk(
+                    {
+                      email: userName!.email,
+                      userId: userName!.id,
+                      documentName: documentNames,
+                      documentMasterId: documentMasterIds,
+                    },
+                    [
+                      userName?.firstName ?? "",
+                      userName?.middleName ?? "",
+                      userName?.lastName ?? "",
+                    ]
+                      .filter(Boolean)
+                      .join("_")
+                  );
+                }}
+              >
+                Download
+              </Button>
+            )}
+            {allDocAccepted &&
+              userName?.userDocStatus !== "MarkAsCompleted" && (
+                <Button
+                  variant="contained"
+                  onClick={() => setMarkAsCompleteDialogOpen(true)}
+                >
+                  Mark as complete
+                </Button>
+              )}
+          </div>
         </div>
         <div className="mx-auto flex flex-col w-full mt-4">
           <div className="tableStyle">
             <DataGrid
               checkboxSelection
               isRowSelectable={(params: GridRowParams) =>
-                !!params.row.uploadedDocumentName
+                !!params.row.uploadedDocumentName &&
+                userName?.userDocStatus !== "MarkAsCompleted"
               }
               disableColumnMenu
               disableRowSelectionOnClick
@@ -441,6 +565,20 @@ const Page = () => {
             />
           </div>
         </div>
+
+        <RejectionReasonDialog
+          open={isRejectionReasonDialogOpen}
+          onClose={setRejectionReasonDialogOpen}
+          onSubmit={(reason: string) => {
+            updateStatus({ ...rejectionBody, rejectedReason: reason });
+          }}
+        />
+
+        <MarkAsCompleteConfirmationDialog
+          open={isMarkAsCompleteDialogOpen}
+          onSubmit={handleMarkAsComplete}
+          onClose={() => setMarkAsCompleteDialogOpen(false)}
+        />
       </Wrapper>
     );
 };
@@ -500,5 +638,91 @@ const MoreActions = ({ onAccept, onReject, onOutsideClick }: any) => {
         </span>
       ))}
     </div>
+  );
+};
+
+const RejectionReasonDialog = ({ open, onClose, onSubmit }: any) => {
+  const [reason, setReason] = useState<string>("");
+  const [hasErr, setHasErr] = useState<boolean>(false);
+
+  return (
+    <Dialog open={open} fullWidth onClose={() => onClose(false)}>
+      <DialogTitle className="flex justify-between items-center">
+        <div>Reason for rejecting the file</div>
+        <div
+          className="cursor-pointer"
+          onClick={() => {
+            setReason("");
+            setHasErr(false);
+            onClose(false);
+          }}
+        >
+          <Tooltip title="Close">
+            <Close />
+          </Tooltip>
+        </div>
+      </DialogTitle>
+      <DialogContent>
+        <Textarea
+          color={hasErr ? "danger" : "neutral"}
+          minRows={4}
+          maxRows={4}
+          placeholder="provide reason..."
+          value={reason}
+          onChange={(e) => {
+            if (reason.length > 300) {
+              return;
+            } else {
+              setHasErr(false);
+              setReason(e.target.value);
+            }
+          }}
+        />
+        {hasErr && (
+          <p className="mt-1 text-sm text-red-600">Please provide the reason</p>
+        )}
+      </DialogContent>
+      <DialogActions>
+        <Button
+          type="button"
+          onClick={() => {
+            if (reason.length === 0) {
+              setHasErr(true);
+              return;
+            } else {
+              onSubmit(reason);
+            }
+          }}
+        >
+          Submit
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+const MarkAsCompleteConfirmationDialog = ({
+  open,
+  onClose,
+  onSubmit,
+}: MarkAsCompleteConfirmationDialogType) => {
+  return (
+    <Dialog open={open} maxWidth="xs" onClose={onClose}>
+      <DialogTitle className="flex justify-between items-center">
+        <div>Confirm</div>
+      </DialogTitle>
+      <DialogContent>
+        Once the user is marked as completed, access to their documents will be
+        restricted. Are you sure you want to do that?
+      </DialogContent>
+      <DialogActions>
+        <Button type="button" onClick={onClose}>
+          No
+        </Button>
+        <Button type="button" color="error" onClick={onSubmit}>
+          Yes
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };

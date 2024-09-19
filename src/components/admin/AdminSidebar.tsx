@@ -18,8 +18,6 @@ import { Theme, makeStyles } from "@material-ui/core/styles";
 
 import ArrowUp from "@/assets/icons/ArrowUp";
 import Settings from "@/assets/icons/Settings";
-import LinkIcon from "@mui/icons-material/Link";
-import Documents from "@/assets/icons/Documents";
 import ArrowDown from "@/assets/icons/ArrowDown";
 import Dashboard from "@/assets/icons/Dashboard";
 import ControlPanel from "@/assets/icons/ControlPanel";
@@ -28,14 +26,9 @@ import MenuIconClose from "@/assets/icons/MenuIconClose";
 
 import { SidebarProps } from "@/types/SideBar";
 import { drawerWidth } from "@/static/commonVariables";
-import { UploadFile } from "@mui/icons-material";
+import { TextSnippetOutlined } from "@mui/icons-material";
 
 export const sidebarItems = [
-  // {
-  //   module: "Documents",
-  //   link: "/admin/documents",
-  //   icon: <Documents />,
-  // },
   {
     module: "Manage Users",
     link: "/admin/manage-users",
@@ -46,6 +39,12 @@ export const sidebarItems = [
     link: "/admin/controlpanel",
     icon: <ControlPanel />,
   },
+  {
+    module: "Reports",
+    link: "/admin/reports",
+    icon: <TextSnippetOutlined sx={{ fontSize: "20px", color: "white" }} />,
+  },
+
   {
     module: "Setting",
     link: "#",

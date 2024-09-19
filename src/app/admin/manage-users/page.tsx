@@ -86,6 +86,10 @@ const Page = () => {
     activeStatus: null,
     DocumentStatus: null,
   });
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    isOpen: boolean;
+    userId: number;
+  }>({ isOpen: false, userId: -1 });
 
   const getManageUserData = (userId: string, isViewMode?: boolean): void => {
     setLoaded(false);
@@ -314,6 +318,22 @@ const Page = () => {
     });
   };
 
+  const handleDelete = () => {
+    const callBack = (status: boolean, message: string) => {
+      if (status) {
+        toast.success(message);
+        getManageUserData("");
+      } else {
+        toast.success(message);
+      }
+      setConfirmationDialog({ isOpen: false, userId: -1 });
+    };
+
+    callAPIwithHeaders("/User/DeleteInactiveUser", "post", callBack, {
+      userId: confirmationDialog.userId,
+    });
+  };
+
   const columns: GridColDef[] = [
     {
       field: "firstName",
@@ -443,6 +463,9 @@ const Page = () => {
                 }
                 isInvitationSent={params.row.isInvitationSent}
                 isActive={params.row.isActive}
+                isMarkedAsCompleted={
+                  params.row.userDocStatus === "MarkAsCompleted"
+                }
                 onInviteSent={() => sendInvite(params.value)}
                 onView={() => {
                   getManageUserData(params.value, true);
@@ -453,6 +476,9 @@ const Page = () => {
                 onRemind={() => {
                   sendReminder(params.value);
                 }}
+                onDelete={() =>
+                  setConfirmationDialog({ isOpen: true, userId: params.value })
+                }
                 onStatusChange={() => handleUserStatusChange(params.value)}
                 onOutsideClick={() => setmoreActionsClickedRowId(-1)}
               />
@@ -532,6 +558,11 @@ const Page = () => {
             setLinks([]);
           }}
         />
+        <DeleteUserConfirmationDialog
+          open={confirmationDialog.isOpen}
+          onClose={() => setConfirmationDialog({ isOpen: false, userId: -1 })}
+          onSubmit={handleDelete}
+        />
       </Wrapper>
     </>
   );
@@ -546,8 +577,10 @@ type MoreActionsType = {
   onRemind: () => void;
   onOutsideClick: () => void;
   onStatusChange: () => void;
+  onDelete: () => void;
   isInvitationSent: boolean;
   isCompleted: boolean;
+  isMarkedAsCompleted: boolean;
   isActive: boolean;
   link: string | null;
 };
@@ -559,12 +592,15 @@ const MoreActions = ({
   onEdit,
   onRemind,
   onStatusChange,
+  onDelete,
   isInvitationSent,
   isActive,
   isCompleted,
+  isMarkedAsCompleted,
   onOutsideClick,
 }: MoreActionsType) => {
   const divRef = useRef<any>(null);
+  const completedUserActions = ["view", "Mark as inactive"];
   const activeUserActions = [
     "view",
     "edit",
@@ -575,11 +611,12 @@ const MoreActions = ({
   ];
   const inActiveUserActions = [
     "view",
-    "edit",
+    // "edit",
+    "Delete",
     "Mark as active",
-    "send invite",
-    "send reminder",
-    "copy invitation link",
+    // "send invite",
+    // "send reminder",
+    // "copy invitation link",
   ];
 
   const actionStyle =
@@ -608,11 +645,16 @@ const MoreActions = ({
       }}
       className="py-2 absolute right-16 bg-white shadow-lg z-10 rounded"
     >
-      {(isActive ? activeUserActions : inActiveUserActions).map(
-        (action: string, index: number) => (
-          <span
-            key={action}
-            className={`${actionStyle} 
+      {(isActive
+        ? isMarkedAsCompleted
+          ? completedUserActions
+          : activeUserActions
+        : inActiveUserActions
+      ).map((action: string, index: number) => (
+        <span
+          key={action}
+          className={`${actionStyle} 
+            
             ${
               isCompleted && (index === 5 || index === 4 || index === 3)
                 ? "pointer-events-none opacity-50"
@@ -628,39 +670,40 @@ const MoreActions = ({
                 ? "pointer-events-none opacity-50"
                 : ""
             } ${
-              index === 3 && isInvitationSent
-                ? "pointer-events-none opacity-50"
-                : ""
-            }`}
-            onClick={
-              action.toLowerCase() === "send invite"
-                ? onInviteSent
-                : action.toLowerCase() === "view"
-                ? onView
-                : action.toLowerCase() === "edit"
-                ? onEdit
-                : action.toLowerCase() === "mark as inactive" ||
-                  action.toLowerCase() === "mark as active"
-                ? onStatusChange
-                : action.toLowerCase() === "send reminder"
-                ? onRemind
-                : action.toLowerCase() === "copy invitation link"
-                ? async () => {
-                    navigator.clipboard.writeText(
-                      `${process.env.app_url}/request?id=${link}`
-                    );
-                    toast.success(
-                      `Validate Code copied sucessfully`,
-                      toastOptions
-                    );
-                  }
-                : undefined
-            }
-          >
-            {action}
-          </span>
-        )
-      )}
+            index === 3 && isInvitationSent
+              ? "pointer-events-none opacity-50"
+              : ""
+          }`}
+          onClick={
+            action.toLowerCase() === "send invite"
+              ? onInviteSent
+              : action.toLowerCase() === "view"
+              ? onView
+              : action.toLowerCase() === "edit"
+              ? onEdit
+              : action.toLowerCase() === "mark as inactive" ||
+                action.toLowerCase() === "mark as active"
+              ? onStatusChange
+              : action.toLowerCase() === "send reminder"
+              ? onRemind
+              : action.toLowerCase() === "copy invitation link"
+              ? async () => {
+                  navigator.clipboard.writeText(
+                    `${process.env.app_url}/request?id=${link}`
+                  );
+                  toast.success(
+                    `Validate Code copied sucessfully`,
+                    toastOptions
+                  );
+                }
+              : action.toLowerCase() === "delete"
+              ? onDelete
+              : undefined
+          }
+        >
+          {action}
+        </span>
+      ))}
     </div>
   );
 };
@@ -1091,6 +1134,38 @@ const FilterPopup = ({
           }}
         >
           Submit
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+type DeleteUserConfirmationDialogType = {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+};
+
+const DeleteUserConfirmationDialog = ({
+  open,
+  onClose,
+  onSubmit,
+}: DeleteUserConfirmationDialogType) => {
+  return (
+    <Dialog open={open} maxWidth="xs" onClose={onClose}>
+      <DialogTitle className="flex justify-between items-center">
+        <div>Confirm</div>
+      </DialogTitle>
+      <DialogContent>
+        This user will be permanently deleted. Are you sure you want to delete
+        it?
+      </DialogContent>
+      <DialogActions>
+        <Button type="button" onClick={onClose}>
+          No
+        </Button>
+        <Button type="button" color="error" onClick={onSubmit}>
+          Yes
         </Button>
       </DialogActions>
     </Dialog>
