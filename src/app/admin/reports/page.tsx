@@ -205,7 +205,7 @@ const documentStatusColumns: GridColDef[] = [
   },
 ];
 
-const page = () => {
+const Page = () => {
   const [reportData, setReportData] = useState([]);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -306,7 +306,7 @@ const page = () => {
     );
 };
 
-export default page;
+export default Page;
 
 const HeaderComponent = ({
   activeTab,
