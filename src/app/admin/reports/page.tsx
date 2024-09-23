@@ -24,6 +24,7 @@ import { initialFieldsError_State } from "@/static/setting/FormVariables";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import Loader from "@/components/common/Loader";
+import { downloadFileFromBase64 } from "@/utils/downloadFileFromBase64";
 
 const CUSTOM_DATE = 5;
 
@@ -50,6 +51,7 @@ type FilterPopupType = {
 type HeaderComponentType = {
   activeTab: number;
   reportPayload: ReportPayloadType;
+  onExport: (arg1: ReportPayloadType) => void;
   getReportData: (arg1: ReportPayloadType) => void;
   setActiveTab: React.Dispatch<React.SetStateAction<number>>;
   setFilterOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -248,13 +250,38 @@ const Page = () => {
     });
   };
 
+  const handleDownload = (params: ReportPayloadType) => {
+    setLoaded(false);
+    const callBack = (status: boolean, message: string, data: any) => {
+      if (status) {
+        toast.success(message);
+        downloadFileFromBase64(data.fileContents, data.fileDownloadName);
+      } else {
+        toast.error(message);
+      }
+      if (isFilterOpen) {
+        setFilterOpen(false);
+      }
+      setLoaded(true);
+    };
+    callAPIwithHeaders("/Reports/GenerateReports", "post", callBack, {
+      ...params,
+      startDate: !!params.startDate
+        ? `${params.startDate.replaceAll("/", "-")}T00:00:00.000Z`
+        : null,
+      endDate: !!params.endDate
+        ? `${params.endDate.replaceAll("/", "-")}T00:00:00.000Z`
+        : null,
+    });
+  };
+
   useEffect(() => {
     getReportData(reportPayload);
   }, []);
 
-  useEffect(() => {
-    // setFilteredColumns(col)
-  }, [reportPayload.reportType]);
+  // useEffect(() => {
+  // setFilteredColumns(col)
+  // }, [reportPayload.reportType]);
 
   if (!loaded) return <Loader />;
   if (loaded)
@@ -267,6 +294,7 @@ const Page = () => {
           setActiveTab={setActiveTab}
           getReportData={getReportData}
           setReportPayload={setReportPayload}
+          onExport={handleDownload}
         />
         <div className="mx-auto flex flex-col w-full mt-4">
           <div className="tableStyle">
@@ -315,6 +343,7 @@ const HeaderComponent = ({
   setActiveTab,
   getReportData,
   setReportPayload,
+  onExport,
 }: HeaderComponentType) => {
   return (
     <div className="flex flex-col gap-5">
@@ -399,9 +428,7 @@ const HeaderComponent = ({
           </span>
           <span
             className="mt-2 cursor-pointer"
-            onClick={() =>
-              getReportData({ ...reportPayload, isDownlaod: true })
-            }
+            onClick={() => onExport({ ...reportPayload, isDownlaod: true })}
           >
             <Tooltip title="Export">
               <Download />

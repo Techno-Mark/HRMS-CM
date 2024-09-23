@@ -112,7 +112,9 @@ const Page = () => {
               d.isMandatory && d.statusDescription?.toLowerCase() === "accepted"
           );
 
-          setAllDocAccepted(data.length === isAllAccepted.length);
+          setAllDocAccepted(
+            data.length > 0 && data.length === isAllAccepted.length
+          );
         } else {
           setLoaded(true);
         }
