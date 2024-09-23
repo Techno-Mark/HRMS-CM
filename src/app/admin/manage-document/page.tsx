@@ -305,6 +305,7 @@ const Form = ({
             )}
           />
           <Autocomplete
+            disabled={!formData.documentId}
             disableClearable
             options={statusOptions}
             value={

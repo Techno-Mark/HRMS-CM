@@ -11,6 +11,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  TablePagination,
 } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import React, { ChangeEvent, useEffect, useState } from "react";
@@ -20,7 +21,6 @@ import { callAPIwithHeaders } from "@/api/commonAPI";
 import { toast } from "react-toastify";
 import Close from "@/assets/icons/Close";
 import { OptionType } from "@/types/ReportDrawer";
-import { initialFieldsError_State } from "@/static/setting/FormVariables";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import Loader from "@/components/common/Loader";
@@ -38,6 +38,9 @@ type ReportPayloadType = {
   search: string | null;
   reportType: 1 | 2 | 3;
   isDownlaod: boolean;
+  UserDocumentStatus: 1 | 2 | 3 | null;
+  PageNo: number;
+  PageSize: number;
 };
 
 type FilterPopupType = {
@@ -49,6 +52,7 @@ type FilterPopupType = {
 };
 
 type HeaderComponentType = {
+  totalCount: number;
   activeTab: number;
   reportPayload: ReportPayloadType;
   onExport: (arg1: ReportPayloadType) => void;
@@ -75,6 +79,12 @@ const PeriodOptions: OptionType[] = [
   { label: "This month", value: 3 },
   { label: "This year", value: 4 },
   { label: "Custom", value: 5 },
+];
+
+const DocStatusOptions: OptionType[] = [
+  { label: "Pending", value: 0 },
+  { label: "Submitted", value: 1 },
+  { label: "Completed", value: 2 },
 ];
 
 const userAddedColumns: GridColDef[] = [
@@ -207,11 +217,14 @@ const documentStatusColumns: GridColDef[] = [
   },
 ];
 
+const rowsPerPageOptions = [10, 25, 50];
+
 const Page = () => {
   const [reportData, setReportData] = useState([]);
   const [loaded, setLoaded] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<number>(0);
   const [isFilterOpen, setFilterOpen] = useState<boolean>(false);
+  const [totalCount, setTotalCount] = useState<number>(-1);
   const [reportPayload, setReportPayload] = useState<ReportPayloadType>({
     roleId: null,
     startDate: null,
@@ -220,16 +233,20 @@ const Page = () => {
     search: null,
     reportType: 1,
     isDownlaod: false,
+    UserDocumentStatus: null,
+    PageNo: 0,
+    PageSize: rowsPerPageOptions[0],
   });
 
   const getReportData = (params: ReportPayloadType) => {
     setLoaded(false);
     const callBack = (status: boolean, message: string, data: any) => {
       if (status) {
-        const transformedData = data.map((d: any, index: number) => ({
+        const transformedData = data.data.map((d: any, index: number) => ({
           ...d,
           index: index,
         }));
+        setTotalCount(data.totalCount);
         setReportData(transformedData);
       } else {
         toast.error(message);
@@ -275,19 +292,37 @@ const Page = () => {
     });
   };
 
+  const handlePageChange = (
+    event: React.MouseEvent<HTMLButtonElement> | null,
+    pageNo: number
+  ) => {
+    setReportPayload((prev) => ({ ...prev, PageNo: pageNo }));
+    getReportData({
+      ...reportPayload,
+      PageNo: pageNo,
+    });
+  };
+
+  const handleRowsPerPageChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setReportPayload((prev: ReportPayloadType) => ({
+      ...prev,
+      PageNo: 0,
+      PageSize: Number(event.target.value),
+    }));
+  };
+
   useEffect(() => {
     getReportData(reportPayload);
   }, []);
-
-  // useEffect(() => {
-  // setFilteredColumns(col)
-  // }, [reportPayload.reportType]);
 
   if (!loaded) return <Loader />;
   if (loaded)
     return (
       <Wrapper>
         <HeaderComponent
+          totalCount={totalCount}
           activeTab={activeTab}
           reportPayload={reportPayload}
           setFilterOpen={setFilterOpen}
@@ -320,6 +355,20 @@ const Page = () => {
                   ? documentStatusColumns
                   : dailyUploadsColumns
               }
+              slots={{
+                footer: () => (
+                  <div className="flex justify-end">
+                    <TablePagination
+                      count={totalCount}
+                      page={reportPayload.PageNo}
+                      onPageChange={handlePageChange}
+                      rowsPerPage={reportPayload.PageSize}
+                      onRowsPerPageChange={handleRowsPerPageChange}
+                      rowsPerPageOptions={rowsPerPageOptions}
+                    />
+                  </div>
+                ),
+              }}
             />
           </div>
         </div>
@@ -337,6 +386,7 @@ const Page = () => {
 export default Page;
 
 const HeaderComponent = ({
+  totalCount,
   activeTab,
   reportPayload,
   setFilterOpen,
@@ -358,11 +408,30 @@ const HeaderComponent = ({
             }`}
             onClick={() => {
               setActiveTab(index);
-              setReportPayload((prev: ReportPayloadType) => ({
-                ...prev,
+              setReportPayload({
+                roleId: null,
+                startDate: null,
+                endDate: null,
+                period: null,
+                search: null,
                 reportType: tab.id,
-              }));
-              getReportData({ ...reportPayload, reportType: tab.id });
+                isDownlaod: false,
+                UserDocumentStatus: null,
+                PageNo: 0,
+                PageSize: rowsPerPageOptions[0],
+              });
+              getReportData({
+                roleId: null,
+                startDate: null,
+                endDate: null,
+                period: null,
+                search: null,
+                reportType: tab.id,
+                isDownlaod: false,
+                UserDocumentStatus: null,
+                PageNo: 0,
+                PageSize: rowsPerPageOptions[0],
+              });
             }}
           >
             {tab.label}
@@ -417,7 +486,20 @@ const HeaderComponent = ({
           </span>
         </div>
 
-        <div className="justify-end flex flex-wrap gap-3 w-full">
+        <div className="justify-end items-end flex gap-3">
+          {totalCount > -1 && (
+            <>
+              {reportPayload.reportType === 1 && (
+                <span>Total User: {totalCount}</span>
+              )}
+              {reportPayload.reportType === 2 && (
+                <span>Total User Document Status: {totalCount}</span>
+              )}
+              {reportPayload.reportType === 3 && (
+                <span>Total Document Uploads: {totalCount}</span>
+              )}
+            </>
+          )}
           <span
             className="mt-2 cursor-pointer"
             onClick={() => setFilterOpen(true)}
@@ -471,23 +553,29 @@ const FilterPopup = ({
   };
 
   const handleReset = () => {
-    setFilter({
+    setFilter((prev: ReportPayloadType) => ({
+      ...prev,
       roleId: null,
       startDate: null,
       endDate: null,
       period: null,
       search: null,
-      reportType: 1,
       isDownlaod: false,
-    });
+      UserDocumentStatus: null,
+      PageNo: 0,
+      PageSize: rowsPerPageOptions[0],
+    }));
     handleSubmit({
+      ...filter,
       roleId: null,
       startDate: null,
       endDate: null,
       period: null,
       search: null,
-      reportType: 1,
       isDownlaod: false,
+      UserDocumentStatus: null,
+      PageNo: 0,
+      PageSize: rowsPerPageOptions[0],
     });
     setFilterOpen(false);
   };
@@ -537,6 +625,20 @@ const FilterPopup = ({
             value={PeriodOptions.find((item) => item.value === filter.period)}
             onChange={(e, record) => handleDropDownChange(record, "period")}
           />
+          {filter.reportType === 2 && (
+            <Autocomplete
+              options={DocStatusOptions}
+              renderInput={(params) => (
+                <TextField {...params} label="Document Status" />
+              )}
+              value={DocStatusOptions.find(
+                (item) => item.value === filter.UserDocumentStatus
+              )}
+              onChange={(e, record) =>
+                handleDropDownChange(record, "UserDocumentStatus")
+              }
+            />
+          )}
           <div className="w-full flex gap-2">
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <div className="flex flex-col ">

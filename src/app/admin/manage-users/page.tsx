@@ -872,7 +872,7 @@ const UserFormDialog = ({
               setEmailError(true);
             }
           }}
-          disabled={userFormData.isViewMode}
+          disabled={userFormData.isViewMode || userFormData.id > 0}
         />
         <TextField
           required

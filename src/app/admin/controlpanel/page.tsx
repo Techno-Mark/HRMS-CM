@@ -330,6 +330,10 @@ const Page = () => {
               !params.value
                 ? "pointer-events-none opacity-50"
                 : "cursor-pointer"
+            } ${
+              userName?.userDocStatus !== "MarkAsCompleted"
+                ? "cursor-pointer"
+                : "pointer-events-none opacity-50"
             }`}
             onClick={() =>
               handleDownload(
