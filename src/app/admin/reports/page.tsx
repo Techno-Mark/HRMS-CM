@@ -38,7 +38,7 @@ type ReportPayloadType = {
   search: string | null;
   reportType: 1 | 2 | 3;
   isDownlaod: boolean;
-  UserDocumentStatus: 1 | 2 | 3 | null;
+  UserDocumentStatus: number | null;
   PageNo: number;
   PageSize: number;
 };
@@ -85,6 +85,7 @@ const DocStatusOptions: OptionType[] = [
   { label: "Pending", value: 0 },
   { label: "Submitted", value: 1 },
   { label: "Completed", value: 2 },
+  { value: 3, label: "Mark As Completed" },
 ];
 
 const userAddedColumns: GridColDef[] = [
@@ -311,6 +312,11 @@ const Page = () => {
       PageNo: 0,
       PageSize: Number(event.target.value),
     }));
+    getReportData({
+      ...reportPayload,
+      PageNo: 0,
+      PageSize: Number(event.target.value),
+    });
   };
 
   useEffect(() => {
@@ -492,9 +498,19 @@ const HeaderComponent = ({
               {reportPayload.reportType === 1 && (
                 <span>Total User: {totalCount}</span>
               )}
-              {reportPayload.reportType === 2 && (
-                <span>Total User Document Status: {totalCount}</span>
-              )}
+
+              {reportPayload.reportType === 2 &&
+                (reportPayload.UserDocumentStatus === 0 ? (
+                  <span>Total Pending User Document: {totalCount}</span>
+                ) : reportPayload.UserDocumentStatus === 1 ? (
+                  <span>Total Submitted User Document: {totalCount}</span>
+                ) : reportPayload.UserDocumentStatus === 2 ? (
+                  <span>Total Completed User Document: {totalCount}</span>
+                ) : reportPayload.UserDocumentStatus === 3 ? (
+                  <span>Total MarkAsCompleted User Document: {totalCount}</span>
+                ) : (
+                  <span>Total User Document Status: {totalCount}</span>
+                ))}
               {reportPayload.reportType === 3 && (
                 <span>Total Document Uploads: {totalCount}</span>
               )}
@@ -534,20 +550,21 @@ const FilterPopup = ({
   startMinDate.setFullYear(currentDate.getFullYear() - 2);
   const [startDateErr, setStartDateErr] = useState<boolean>(false);
   const [endDateErr, setEndDateErr] = useState<boolean>(false);
+  const [appliedFilter, setAppliedFilter] = useState<ReportPayloadType>(filter);
 
   const handleDropDownChange = (record: any, field: string) => {
     if (record === null) {
-      setFilter({ ...filter, [field]: null });
+      setAppliedFilter({ ...appliedFilter, [field]: null });
     } else {
       if (field === "period" && record.value !== CUSTOM_DATE) {
-        setFilter({
-          ...filter,
+        setAppliedFilter({
+          ...appliedFilter,
           [field]: record.value,
           startDate: null,
           endDate: null,
         });
       } else {
-        setFilter({ ...filter, [field]: record.value });
+        setAppliedFilter({ ...appliedFilter, [field]: record.value });
       }
     }
   };
@@ -581,23 +598,25 @@ const FilterPopup = ({
   };
 
   const applyFilter = () => {
-    if (filter.period === CUSTOM_DATE) {
-      if (!filter.endDate && !filter.startDate) {
+    if (appliedFilter.period === CUSTOM_DATE) {
+      if (!appliedFilter.endDate && !appliedFilter.startDate) {
         setStartDateErr(true);
         setEndDateErr(true);
         return;
       }
-      if (!filter.startDate) {
+      if (!appliedFilter.startDate) {
         setStartDateErr(true);
         return;
       }
-      if (!filter.endDate) {
+      if (!appliedFilter.endDate) {
         setEndDateErr(true);
         return;
       }
-      handleSubmit(filter);
+      setFilter(appliedFilter);
+      handleSubmit(appliedFilter);
     } else {
-      handleSubmit(filter);
+      setFilter(appliedFilter);
+      handleSubmit(appliedFilter);
     }
   };
 
@@ -606,7 +625,12 @@ const FilterPopup = ({
       <DialogTitle className="flex justify-between">
         <span>Filter</span>
         <Tooltip title="Close">
-          <Button color="error" onClick={() => setFilterOpen(false)}>
+          <Button
+            color="error"
+            onClick={() => {
+              setFilterOpen(false);
+            }}
+          >
             <Close size={1.25} />
           </Button>
         </Tooltip>
@@ -616,13 +640,17 @@ const FilterPopup = ({
           <Autocomplete
             options={RoleOptions}
             renderInput={(params) => <TextField {...params} label="Role" />}
-            value={RoleOptions.find((item) => item.value === filter.roleId)}
+            value={RoleOptions.find(
+              (item) => item.value === appliedFilter.roleId
+            )}
             onChange={(e, record) => handleDropDownChange(record, "roleId")}
           />
           <Autocomplete
             options={PeriodOptions}
             renderInput={(params) => <TextField {...params} label="Period" />}
-            value={PeriodOptions.find((item) => item.value === filter.period)}
+            value={PeriodOptions.find(
+              (item) => item.value === appliedFilter.period
+            )}
             onChange={(e, record) => handleDropDownChange(record, "period")}
           />
           {filter.reportType === 2 && (
@@ -632,7 +660,7 @@ const FilterPopup = ({
                 <TextField {...params} label="Document Status" />
               )}
               value={DocStatusOptions.find(
-                (item) => item.value === filter.UserDocumentStatus
+                (item) => item.value === appliedFilter.UserDocumentStatus
               )}
               onChange={(e, record) =>
                 handleDropDownChange(record, "UserDocumentStatus")
@@ -644,16 +672,22 @@ const FilterPopup = ({
               <div className="flex flex-col ">
                 <DatePicker
                   label="Start Date"
-                  disabled={filter.period !== CUSTOM_DATE}
+                  disabled={appliedFilter.period !== CUSTOM_DATE}
                   minDate={dayjs(startMinDate)}
                   maxDate={
-                    !!filter.endDate ? dayjs(filter.endDate) : dayjs(new Date())
+                    !!appliedFilter.endDate
+                      ? dayjs(appliedFilter.endDate)
+                      : dayjs(new Date())
                   }
-                  value={!!filter.startDate ? dayjs(filter.startDate) : null}
+                  value={
+                    !!appliedFilter.startDate
+                      ? dayjs(appliedFilter.startDate)
+                      : null
+                  }
                   onChange={(e) => {
                     const fullDate = dayjs(e).format("YYYY/MM/DD");
                     setStartDateErr(false);
-                    setFilter((prev: ReportPayloadType) => ({
+                    setAppliedFilter((prev: ReportPayloadType) => ({
                       ...prev,
                       startDate: fullDate,
                     }));
@@ -670,18 +704,22 @@ const FilterPopup = ({
               <div className="flex flex-col">
                 <DatePicker
                   label="End Date"
-                  disabled={filter.period !== CUSTOM_DATE}
-                  value={!!filter.endDate ? dayjs(filter.endDate) : null}
+                  disabled={appliedFilter.period !== CUSTOM_DATE}
+                  value={
+                    !!appliedFilter.endDate
+                      ? dayjs(appliedFilter.endDate)
+                      : null
+                  }
                   minDate={
-                    !!filter.startDate
-                      ? dayjs(filter.startDate)
+                    !!appliedFilter.startDate
+                      ? dayjs(appliedFilter.startDate)
                       : dayjs(startMinDate)
                   }
                   maxDate={dayjs(new Date())}
                   onChange={(e) => {
                     const fullDate = dayjs(e).format("YYYY/MM/DD");
                     setEndDateErr(false);
-                    setFilter((prev: ReportPayloadType) => ({
+                    setAppliedFilter((prev: ReportPayloadType) => ({
                       ...prev,
                       endDate: fullDate,
                     }));

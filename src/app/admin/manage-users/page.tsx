@@ -50,6 +50,7 @@ const DocumentStatusOptions = [
   { value: 0, label: "Pending" },
   { value: 1, label: "Submitted" },
   { value: 2, label: "Completed" },
+  { value: 3, label: "Mark As Completed" },
 ];
 
 const RESET_FILTER = "reset";
