@@ -9,7 +9,7 @@ import {
   GridRowParams,
   GridRowSelectionModel,
 } from "@mui/x-data-grid";
-import { Close, Download, MoreVert, Title } from "@mui/icons-material";
+import { Close, Download, MoreVert } from "@mui/icons-material";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   Autocomplete,
@@ -107,13 +107,15 @@ const Page = () => {
           setLoaded(true);
           setData(data);
 
-          const isAllAccepted = data.filter(
+          const mandatoryDocCount = data.filter((d: any) => d.isMandatory);
+          const allAcceptedDocCount = data.filter(
             (d: any) =>
               d.isMandatory && d.statusDescription?.toLowerCase() === "accepted"
           );
 
           setAllDocAccepted(
-            data.length > 0 && data.length === isAllAccepted.length
+            data.length > 0 &&
+              mandatoryDocCount.length === allAcceptedDocCount.length
           );
         } else {
           setLoaded(true);
