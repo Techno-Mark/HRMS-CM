@@ -1,19 +1,25 @@
 "use client";
 //react hooks
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 //3rd party libraries & icons
 import {
+  Autocomplete,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
   FormControlLabel,
   IconButton,
   InputAdornment,
+  InputLabel,
+  MenuItem,
   Radio,
   RadioGroup,
+  Select,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
@@ -26,6 +32,28 @@ import { callAPIwithHeaders, callAPIwithParams } from "@/api/commonAPI";
 import { UserDataType, UserFormDataType } from "@/types/ManageUsers";
 import { toastOptions } from "@/static/toastOptions";
 import LinksDialog from "@/components/LinksDialog";
+import Close from "@/assets/icons/Close";
+import SearchIcon from "@/assets/icons/SearchIcon";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
+
+const RoleOptions = [
+  { value: 2, label: "Candidate" },
+  { value: 3, label: "Employee" },
+];
+
+const StatusOptions = [
+  { value: 1, label: "Active" },
+  { value: 0, label: "Inactive" },
+];
+
+const DocumentStatusOptions = [
+  { value: 0, label: "Pending" },
+  { value: 1, label: "Submitted" },
+  { value: 2, label: "Completed" },
+  { value: 3, label: "Mark As Completed" },
+];
+
+const RESET_FILTER = "reset";
 
 const Page = () => {
   const [links, setLinks] = useState<any>([]);
@@ -45,29 +73,46 @@ const Page = () => {
     email: "",
     contactPhone: "",
     roleId: "2",
+    EmployeeCode: "",
     isActive: true,
     id: 0,
     password: "",
     isViewMode: false,
   });
+  const [filterOpen, setFilterOpen] = useState<boolean>(false);
+  const [filter, setFilter] = useState({
+    userId: null,
+    roleId: null,
+    search: "",
+    activeStatus: null,
+    DocumentStatus: null,
+  });
+  const [confirmationDialog, setConfirmationDialog] = useState<{
+    isOpen: boolean;
+    userId: number;
+  }>({ isOpen: false, userId: -1 });
 
   const getManageUserData = (userId: string, isViewMode?: boolean): void => {
+    setLoaded(false);
+
     const callBack = async (
       status: boolean,
       message: string,
       data: any
     ): Promise<void> => {
       if (status) {
-        if (!userId) {
+        if (!userId || userId === RESET_FILTER) {
           setLoaded(true);
           setUserData(data);
         } else {
           setUserFormData({
             ...data[0],
             isViewMode: isViewMode ? isViewMode : false,
+            EmployeeCode: data[0].employeeCode,
           });
           setmoreActionsClickedRowId(-1);
           setDialogOpen(true);
+          setLoaded(true);
         }
       } else {
         toast.error(message);
@@ -75,15 +120,29 @@ const Page = () => {
       }
     };
 
-    callAPIwithParams(
+    callAPIwithHeaders(
       "/ManageUser/GetManageUser",
       "post",
       callBack,
-      {},
-      {
-        name: "UserId",
-        value: String(userId),
-      }
+      userId === RESET_FILTER
+        ? {
+            userId: null,
+            roleId: null,
+            search: null,
+            activeStatus: null,
+            DocumentStatus: null,
+          }
+        : {
+            userId: !userId ? null : userId,
+            roleId: !filter.roleId ? null : filter.roleId,
+            search: isViewMode || !filter.search ? null : filter.search,
+            activeStatus:
+              filter.activeStatus === null
+                ? null
+                : Boolean(filter.activeStatus),
+            DocumentStatus:
+              filter.DocumentStatus === null ? null : filter.DocumentStatus,
+          }
     );
   };
 
@@ -139,16 +198,32 @@ const Page = () => {
       }
     };
 
-    callAPIwithHeaders("/User/AddUpdateUser", "post", callBack, userFormData);
+    callAPIwithHeaders("/User/AddUpdateUser", "post", callBack, {
+      firstName: !userFormData.firstName ? null : userFormData.firstName,
+      middleName: !userFormData.middleName ? null : userFormData.middleName,
+      lastName: !userFormData.lastName ? null : userFormData.lastName,
+      email: !userFormData.email ? null : userFormData.email,
+      contactPhone: !userFormData.contactPhone
+        ? null
+        : userFormData.contactPhone,
+      roleId: !userFormData.roleId ? null : userFormData.roleId,
+      EmployeeCode: !userFormData.EmployeeCode
+        ? null
+        : userFormData.EmployeeCode,
+      isActive: userFormData.isActive,
+      id: userFormData.id,
+      password: !userFormData.password ? null : userFormData.password,
+    });
   };
 
   const sendReminder = (userId: string): void => {
+    setLoaded(false);
     const callBack = async (
       status: boolean,
       message: string
     ): Promise<void> => {
       if (status) {
-        toast.success(message);
+        toast.success("Reminder sent successfully");
         setLoaded(true);
         setmoreActionsClickedRowId(-1);
       } else {
@@ -182,6 +257,7 @@ const Page = () => {
       email: "",
       contactPhone: "",
       roleId: "2",
+      EmployeeCode: "",
       isActive: true,
       id: 0,
       password: "",
@@ -206,7 +282,7 @@ const Page = () => {
     //if password field contains error
     if (
       userFormData.roleId === "1" &&
-      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(
+      !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,64}$/.test(
         userFormData.password
       )
     ) {
@@ -218,6 +294,45 @@ const Page = () => {
 
     //no validation error
     return false;
+  };
+
+  const handleUserStatusChange = (userId: number) => {
+    const callBack = async (
+      status: boolean,
+      message: string
+    ): Promise<void> => {
+      if (status) {
+        toast.success(message);
+        setLoaded(true);
+        setmoreActionsClickedRowId(-1);
+        getManageUserData("");
+      } else {
+        toast.error(message);
+        setLoaded(true);
+        setmoreActionsClickedRowId(-1);
+        getManageUserData("");
+      }
+    };
+
+    callAPIwithHeaders("/ManageUser/InactiveUser", "post", callBack, {
+      userId: userId,
+    });
+  };
+
+  const handleDelete = () => {
+    const callBack = (status: boolean, message: string) => {
+      if (status) {
+        toast.success(message);
+        getManageUserData("");
+      } else {
+        toast.success(message);
+      }
+      setConfirmationDialog({ isOpen: false, userId: -1 });
+    };
+
+    callAPIwithHeaders("/User/DeleteInactiveUser", "post", callBack, {
+      userId: confirmationDialog.userId,
+    });
   };
 
   const columns: GridColDef[] = [
@@ -232,15 +347,15 @@ const Page = () => {
         </span>
       ),
       renderCell: (params) => {
-        return (
-          <div>
-            {params.row.firstName +
+        const currentName =
+          params.row.middleName === null || params.row.middleName == ""
+            ? params.row.firstName + " " + params.row.lastName
+            : params.row.firstName +
               " " +
               params.row.middleName +
               " " +
-              params.row.lastName}
-          </div>
-        );
+              params.row.lastName;
+        return <div>{currentName}</div>;
       },
     },
     {
@@ -282,7 +397,7 @@ const Page = () => {
               params.row.isActive ? "text-green-600" : "text-red-600"
             }`}
           >
-            {params.row.isActive ? "Active" : "Deactive"}
+            {params.row.isActive ? "Active" : "Inactive"}
           </div>
         );
       },
@@ -302,7 +417,7 @@ const Page = () => {
       },
     },
     {
-      field: "roleId",
+      field: "roleName",
       headerName: "Role",
       sortable: false,
       flex: 1,
@@ -312,7 +427,7 @@ const Page = () => {
         </span>
       ),
       renderCell: (params) => {
-        return <div>{params.value === 1 ? "Admin" : "Candidate"}</div>;
+        return <div>{params.value}</div>;
       },
     },
     {
@@ -348,6 +463,10 @@ const Page = () => {
                   params.row.userDocStatus.toLowerCase() === "submitted"
                 }
                 isInvitationSent={params.row.isInvitationSent}
+                isActive={params.row.isActive}
+                isMarkedAsCompleted={
+                  params.row.userDocStatus === "MarkAsCompleted"
+                }
                 onInviteSent={() => sendInvite(params.value)}
                 onView={() => {
                   getManageUserData(params.value, true);
@@ -358,6 +477,10 @@ const Page = () => {
                 onRemind={() => {
                   sendReminder(params.value);
                 }}
+                onDelete={() =>
+                  setConfirmationDialog({ isOpen: true, userId: params.value })
+                }
+                onStatusChange={() => handleUserStatusChange(params.value)}
                 onOutsideClick={() => setmoreActionsClickedRowId(-1)}
               />
             )}
@@ -375,7 +498,15 @@ const Page = () => {
     <>
       {!loaded && <Loader />}
       <Wrapper>
-        <HeaderComponent setDialogOpen={setDialogOpen} />
+        <HeaderComponent
+          value={filter.search}
+          setSearchValue={setFilter}
+          setFilterOpen={setFilterOpen}
+          setDialogOpen={setDialogOpen}
+          handleSearch={(isClearing: boolean) =>
+            getManageUserData("", isClearing)
+          }
+        />
         <div className="mx-auto flex flex-col w-full mt-4">
           <div className="tableStyle">
             <DataGrid
@@ -412,12 +543,26 @@ const Page = () => {
           setShowPassword={setShowPassword}
           setPwdErr={setPwdErr}
         />
+        <FilterPopup
+          setFilterOpen={setFilterOpen}
+          isFilterOpen={filterOpen}
+          filter={filter}
+          setFilter={setFilter}
+          handleSubmit={(isReseting: boolean) =>
+            isReseting ? getManageUserData(RESET_FILTER) : getManageUserData("")
+          }
+        />
         <LinksDialog
           links={links}
           handleClose={() => {
             setmoreActionsClickedRowId(-1);
             setLinks([]);
           }}
+        />
+        <DeleteUserConfirmationDialog
+          open={confirmationDialog.isOpen}
+          onClose={() => setConfirmationDialog({ isOpen: false, userId: -1 })}
+          onSubmit={handleDelete}
         />
       </Wrapper>
     </>
@@ -432,8 +577,12 @@ type MoreActionsType = {
   onEdit: () => void;
   onRemind: () => void;
   onOutsideClick: () => void;
+  onStatusChange: () => void;
+  onDelete: () => void;
   isInvitationSent: boolean;
   isCompleted: boolean;
+  isMarkedAsCompleted: boolean;
+  isActive: boolean;
   link: string | null;
 };
 
@@ -443,18 +592,34 @@ const MoreActions = ({
   onView,
   onEdit,
   onRemind,
+  onStatusChange,
+  onDelete,
   isInvitationSent,
+  isActive,
   isCompleted,
+  isMarkedAsCompleted,
   onOutsideClick,
 }: MoreActionsType) => {
   const divRef = useRef<any>(null);
-  const actions = [
+  const completedUserActions = ["view", "Mark as inactive"];
+  const activeUserActions = [
     "view",
     "edit",
+    "Mark as inactive",
     "send invite",
     "send reminder",
     "copy invitation link",
   ];
+  const inActiveUserActions = [
+    "view",
+    // "edit",
+    "Delete",
+    "Mark as active",
+    // "send invite",
+    // "send reminder",
+    // "copy invitation link",
+  ];
+
   const actionStyle =
     "flex capitalize text-sm px-6 py-1 cursor-pointer hover:bg-slate-100";
 
@@ -481,12 +646,23 @@ const MoreActions = ({
       }}
       className="py-2 absolute right-16 bg-white shadow-lg z-10 rounded"
     >
-      {actions.map((action: string, index: number) => (
+      {(isActive
+        ? isMarkedAsCompleted
+          ? completedUserActions
+          : activeUserActions
+        : inActiveUserActions
+      ).map((action: string, index: number) => (
         <span
           key={action}
           className={`${actionStyle} 
+            
             ${
-              isCompleted && (index === 4 || index === 3 || index === 2)
+              isCompleted && (index === 5 || index === 4 || index === 3)
+                ? "pointer-events-none opacity-50"
+                : ""
+            }
+            ${
+              index === 5 && !isInvitationSent
                 ? "pointer-events-none opacity-50"
                 : ""
             }
@@ -494,13 +670,8 @@ const MoreActions = ({
               index === 4 && !isInvitationSent
                 ? "pointer-events-none opacity-50"
                 : ""
-            }
-            ${
-              index === 3 && !isInvitationSent
-                ? "pointer-events-none opacity-50"
-                : ""
             } ${
-            index === 2 && isInvitationSent
+            index === 3 && isInvitationSent
               ? "pointer-events-none opacity-50"
               : ""
           }`}
@@ -511,6 +682,9 @@ const MoreActions = ({
               ? onView
               : action.toLowerCase() === "edit"
               ? onEdit
+              : action.toLowerCase() === "mark as inactive" ||
+                action.toLowerCase() === "mark as active"
+              ? onStatusChange
               : action.toLowerCase() === "send reminder"
               ? onRemind
               : action.toLowerCase() === "copy invitation link"
@@ -523,6 +697,8 @@ const MoreActions = ({
                     toastOptions
                   );
                 }
+              : action.toLowerCase() === "delete"
+              ? onDelete
               : undefined
           }
         >
@@ -576,6 +752,32 @@ const UserFormDialog = ({
       <DialogTitle>Enter User Details</DialogTitle>
       <DialogContent className="w-[500px] flex flex-col gap-4">
         <div className="flex gap-2">
+          {userFormData.roleId == "3" && (
+            <TextField
+              required
+              value={userFormData.EmployeeCode}
+              id="empCode"
+              name="empCode"
+              label="Employee Code"
+              type="text"
+              fullWidth
+              variant="standard"
+              onChange={(e) => {
+                if (
+                  !/^[0-9]*$/.test(e.target.value) ||
+                  e.target.value.length > 10
+                ) {
+                  return;
+                } else {
+                  setUserFormData({
+                    ...userFormData,
+                    EmployeeCode: e.target.value.trim(),
+                  });
+                }
+              }}
+              disabled={userFormData.isViewMode || userFormData.id > 0}
+            />
+          )}
           <TextField
             required
             value={userFormData.firstName}
@@ -586,30 +788,44 @@ const UserFormDialog = ({
             fullWidth
             variant="standard"
             onChange={(e) => {
-              setUserFormData({
-                ...userFormData,
-                firstName: e.target.value.trim(),
-              });
+              if (e.target.value.length > 20) {
+                return;
+              } else if (!/^[A-Za-z\s]*$/.test(e.target.value)) {
+                return;
+              } else {
+                setUserFormData({
+                  ...userFormData,
+                  firstName: e.target.value.trim(),
+                });
+              }
             }}
             disabled={userFormData.isViewMode}
           />
-          <TextField
-            required
-            value={userFormData.middleName}
-            id="middleName"
-            name="middleName"
-            label="Middle Name"
-            type="text"
-            fullWidth
-            variant="standard"
-            onChange={(e) =>
-              setUserFormData({
-                ...userFormData,
-                middleName: e.target.value.trim(),
-              })
-            }
-            disabled={userFormData.isViewMode}
-          />
+          {userFormData.roleId != "3" && (
+            <TextField
+              required
+              value={userFormData.middleName}
+              id="middleName"
+              name="middleName"
+              label="Middle Name"
+              type="text"
+              fullWidth
+              variant="standard"
+              onChange={(e) => {
+                if (e.target.value.length > 20) {
+                  return;
+                } else if (!/^[A-Za-z\s]*$/.test(e.target.value)) {
+                  return;
+                } else {
+                  setUserFormData({
+                    ...userFormData,
+                    middleName: e.target.value.trim(),
+                  });
+                }
+              }}
+              disabled={userFormData.isViewMode}
+            />
+          )}
           <TextField
             required
             value={userFormData.lastName}
@@ -619,12 +835,18 @@ const UserFormDialog = ({
             type="text"
             fullWidth
             variant="standard"
-            onChange={(e) =>
-              setUserFormData({
-                ...userFormData,
-                lastName: e.target.value.trim(),
-              })
-            }
+            onChange={(e) => {
+              if (e.target.value.length > 20) {
+                return;
+              } else if (!/^[A-Za-z\s]*$/.test(e.target.value)) {
+                return;
+              } else {
+                setUserFormData({
+                  ...userFormData,
+                  lastName: e.target.value.trim(),
+                });
+              }
+            }}
             disabled={userFormData.isViewMode}
           />
         </div>
@@ -651,7 +873,7 @@ const UserFormDialog = ({
               setEmailError(true);
             }
           }}
-          disabled={userFormData.isViewMode}
+          disabled={userFormData.isViewMode || userFormData.id > 0}
         />
         <TextField
           required
@@ -663,9 +885,7 @@ const UserFormDialog = ({
           fullWidth
           variant="standard"
           error={phoneError}
-          helperText={
-            phoneError && "Please enter valid 10 digit contact number"
-          }
+          helperText={phoneError && "Please enter a valid number"}
           onChange={(e) => {
             setPhoneError(false);
             if (e.target.value.length > 10) {
@@ -701,6 +921,12 @@ const UserFormDialog = ({
             value="2"
             control={<Radio />}
             label="Candidate"
+          />
+          <FormControlLabel
+            disabled={userFormData.isViewMode}
+            value="3"
+            control={<Radio />}
+            label="Employee"
           />
         </RadioGroup>
         {userFormData.roleId === "1" && (
@@ -744,17 +970,78 @@ const UserFormDialog = ({
 };
 
 type HeaderComponent = {
+  value: string;
+  setSearchValue: React.Dispatch<React.SetStateAction<any>>;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setFilterOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  handleSearch: (arg1: boolean) => void;
 };
 
-const HeaderComponent = ({ setDialogOpen }: HeaderComponent) => {
+const HeaderComponent = ({
+  value,
+  setSearchValue,
+  setFilterOpen,
+  setDialogOpen,
+  handleSearch,
+}: HeaderComponent) => {
   return (
-    <div className="flex-row flex flex-wrap justify-between w-full">
-      <div className="justify-end flex flex-wrap w-full">
-        {/* <div className="justify-start flex items-center font-semibold">
-          Manage Users
-        </div> */}
+    <div className="flex justify-between w-full">
+      <div className="flex items-center gap-2">
+        <span className="mr-5 flex items-center relative border-b border-b-black focus-within:border-b-[#223E99]">
+          <TextField
+            className="!w-44 pr-12"
+            variant="standard"
+            placeholder="Search"
+            value={value}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch(false);
+              }
+            }}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              setSearchValue((prevFilter: any) => ({
+                ...prevFilter,
+                search: e.target.value,
+              }));
+            }}
+            InputProps={{
+              disableUnderline: true,
+            }}
+          />
+          {value.length > 0 && (
+            <span
+              className="absolute right-7 top-2.5 cursor-pointer"
+              onClick={() => {
+                setSearchValue((prevFilter: any) => ({
+                  ...prevFilter,
+                  search: "",
+                }));
+                handleSearch(true);
+              }}
+            >
+              <Close />
+            </span>
+          )}
+          <span
+            className={`absolute right-1.5 top-2.5 ${
+              true ? "cursor-pointer" : "pointer-events-none"
+            }`}
+            onClick={() => handleSearch(false)}
+          >
+            <SearchIcon />
+          </span>
+        </span>
+        <span
+          className="mt-2 cursor-pointer"
+          onClick={() => setFilterOpen(true)}
+        >
+          <Tooltip title="Filter">
+            <FilterAltIcon />
+          </Tooltip>
+        </span>
+      </div>
 
+      <div className="justify-end flex flex-wrap w-full">
         <Button
           className="flex gap-2"
           variant="contained"
@@ -764,5 +1051,124 @@ const HeaderComponent = ({ setDialogOpen }: HeaderComponent) => {
         </Button>
       </div>
     </div>
+  );
+};
+
+const FilterPopup = ({
+  isFilterOpen,
+  filter,
+  setFilter,
+  setFilterOpen,
+  handleSubmit,
+}: any) => {
+  const handleDropDownChange = (record: any, field: string) => {
+    if (record === null) {
+      setFilter({ ...filter, [field]: null });
+    } else {
+      setFilter({ ...filter, [field]: record.value });
+    }
+  };
+
+  const handleReset = () => {
+    setFilter({
+      userId: null,
+      roleId: null,
+      search: "",
+      activeStatus: null,
+      DocumentStatus: null,
+    });
+    handleSubmit(true);
+    setFilterOpen(false);
+  };
+
+  return (
+    <Dialog open={isFilterOpen}>
+      <DialogTitle className="flex justify-between">
+        <span>Filter</span>
+        <Tooltip title="Close">
+          <Button color="error" onClick={() => setFilterOpen(false)}>
+            <Close size={1.25} />
+          </Button>
+        </Tooltip>
+      </DialogTitle>
+      <DialogContent className="w-[500px] flex flex-col gap-4">
+        <div className="my-4 flex flex-col gap-4">
+          <Autocomplete
+            options={RoleOptions}
+            renderInput={(params) => <TextField {...params} label="Role" />}
+            value={RoleOptions.find((item) => item.value === filter.roleId)}
+            onChange={(e, record) => handleDropDownChange(record, "roleId")}
+          />
+          <Autocomplete
+            options={StatusOptions}
+            renderInput={(params) => <TextField {...params} label="Status" />}
+            value={StatusOptions.find(
+              (item) => item.value === filter.activeStatus
+            )}
+            onChange={(e, record) =>
+              handleDropDownChange(record, "activeStatus")
+            }
+          />
+          <Autocomplete
+            options={DocumentStatusOptions}
+            renderInput={(params) => (
+              <TextField {...params} label="Document Status" />
+            )}
+            value={DocumentStatusOptions.find(
+              (item) => item.value === filter.DocumentStatus
+            )}
+            onChange={(e, record) =>
+              handleDropDownChange(record, "DocumentStatus")
+            }
+          />
+        </div>
+      </DialogContent>
+      <DialogActions>
+        <Button color="error" onClick={handleReset}>
+          Reset
+        </Button>
+        <Button
+          type="button"
+          onClick={() => {
+            handleSubmit(false);
+            setFilterOpen(false);
+          }}
+        >
+          Submit
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+type DeleteUserConfirmationDialogType = {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: () => void;
+};
+
+const DeleteUserConfirmationDialog = ({
+  open,
+  onClose,
+  onSubmit,
+}: DeleteUserConfirmationDialogType) => {
+  return (
+    <Dialog open={open} maxWidth="xs" onClose={onClose}>
+      <DialogTitle className="flex justify-between items-center">
+        <div>Confirm</div>
+      </DialogTitle>
+      <DialogContent>
+        This user will be permanently deleted. Are you sure you want to delete
+        it?
+      </DialogContent>
+      <DialogActions>
+        <Button type="button" onClick={onClose}>
+          No
+        </Button>
+        <Button type="button" color="error" onClick={onSubmit}>
+          Yes
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };

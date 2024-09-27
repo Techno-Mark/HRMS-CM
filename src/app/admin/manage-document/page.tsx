@@ -23,8 +23,8 @@ const Page = () => {
     documentId: null,
     documentName: "",
     description: "",
-    isActive: false,
-    isMandatory: false,
+    isActive: true,
+    isMandatory: true,
   });
 
   const addupdateForm = (e: any) => {
@@ -43,12 +43,10 @@ const Page = () => {
       }
     };
 
-    callAPIwithHeaders(
-      "/Document/AddUpdateDocument",
-      "post",
-      callBack,
-      formData
-    );
+    callAPIwithHeaders("/Document/AddUpdateDocument", "post", callBack, {
+      ...formData,
+      documentName: formData.documentName.trim(),
+    });
   };
 
   const handleDialogClose = () => {
@@ -58,8 +56,8 @@ const Page = () => {
       documentId: null,
       documentName: "",
       description: "",
-      isActive: false,
-      isMandatory: false,
+      isActive: true,
+      isMandatory: true,
     });
   };
 
@@ -183,10 +181,6 @@ const Page = () => {
     <Wrapper>
       <div className="flex-row flex flex-wrap justify-between w-full">
         <div className="justify-end flex flex-wrap w-full">
-          {/* <div className="justify-start flex items-center font-semibold">
-            Manage Document
-          </div> */}
-
           <Button
             className="flex gap-2"
             variant="contained"
@@ -268,12 +262,19 @@ const Form = ({
             fullWidth
             value={formData.documentName}
             variant="standard"
-            onChange={(e) =>
-              setFormData((formData: any) => ({
-                ...formData,
-                documentName: e.target.value,
-              }))
-            }
+            onChange={(e) => {
+              if (
+                !/^[^\\/:.*?"<>|]*$/.test(e.target.value) ||
+                e.target.value.length > 30
+              ) {
+                return;
+              } else {
+                setFormData((formData: any) => ({
+                  ...formData,
+                  documentName: e.target.value,
+                }));
+              }
+            }}
           />
           <Autocomplete
             disableClearable
@@ -304,6 +305,7 @@ const Form = ({
             )}
           />
           <Autocomplete
+            disabled={!formData.documentId}
             disableClearable
             options={statusOptions}
             value={
@@ -337,6 +339,8 @@ const Form = ({
             placeholder="Description"
             className="w-full p-2 border resize-none outline-none rounded-md"
             rows={4}
+            minLength={3}
+            maxLength={300}
             id="description"
             value={formData.description}
             onChange={(e) =>

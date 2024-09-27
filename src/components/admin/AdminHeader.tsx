@@ -10,15 +10,13 @@ import {
   Menu as MenuIcon,
   PowerSettingsNew as PowerSettingsNewIcon,
 } from "@mui/icons-material";
-
+import VpnKeyOutlinedIcon from "@mui/icons-material/VpnKeyOutlined";
 import Cookies from "js-cookie";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import ArrowUp from "@/assets/icons/ArrowUp";
 import ArrowDown from "@/assets/icons/ArrowDown";
-import NotificationIcon from "@/assets/icons/NotificationIcon";
-
 import { removeCookies } from "@/utils/authFunctions";
 import { drawerWidth } from "@/static/commonVariables";
 import { AppBarProps, HeaderPropsType, Option } from "@/types/AdminHeader";
@@ -61,6 +59,11 @@ const Header = ({ openSidebar }: HeaderPropsType) => {
   const options: Option[] = [
     {
       id: 1,
+      label: "Change Password",
+      icon: <VpnKeyOutlinedIcon className="!text-[#a8a8a8]" />,
+    },
+    {
+      id: 2,
       label: "Logout",
       icon: <PowerSettingsNewIcon className="text-red-600" />,
     },
@@ -70,10 +73,32 @@ const Header = ({ openSidebar }: HeaderPropsType) => {
     setOpen(!isOpen);
   };
 
-  const handleSubmit = () => {
-    removeCookies();
-    localStorage.clear();
-    router.push("/");
+  const handleSubmit = (optionID: number) => {
+    const CHANGEPWD = 1;
+    const LOGOUT = 2;
+
+    switch (optionID) {
+      case CHANGEPWD:
+        router.push("/admin/changepassword");
+        break;
+      case LOGOUT:
+        removeCookies();
+        localStorage.clear();
+        router.push("/");
+        break;
+    }
+  };
+
+  const getHeaderLabel = () => {
+    return url.includes("manage-document")
+      ? "Manage Document"
+      : url.includes("manage-users")
+      ? "Manage Users"
+      : url.includes("controlpanel")
+      ? "Control Panel"
+      : url.includes("changepassword")
+      ? "Change Password"
+      : url[url.length - 1];
   };
 
   return (
@@ -102,22 +127,10 @@ const Header = ({ openSidebar }: HeaderPropsType) => {
         <div className="flex flex-row w-full justify-between items-center">
           <div className="!text-[#000000]">
             <span className="!font-bold text-lg capitalize">
-              {url.includes("manage-document")
-                ? "Manage Document"
-                : url.includes("manage-users")
-                ? "Manage Users"
-                : url.includes("controlpanel")
-                ? "Control Panel"
-                : url[url.length - 1]}
+              {getHeaderLabel()}
             </span>
           </div>
           <div className="relative flex gap-[30px]">
-            {/* <NotificationIcon /> */}
-
-            {/* <div className="absolute bottom-3 left-7">
-              <Badge color="primary" variant="dot" className="right-2"></Badge>
-            </div> */}
-
             <div
               className="cursor-pointer relative flex gap-2.5 items-center"
               onClick={handleToggle}
@@ -132,7 +145,7 @@ const Header = ({ openSidebar }: HeaderPropsType) => {
                   width: dropDownRef.current?.clientWidth,
                   position: "absolute",
                   top: "calc(100% + 5px)",
-                  left: 0,
+                  left: -100,
                 }}
                 className={`absolute mt-[5px] bg-[#f9f9f9] z-10 ${
                   isOpen ? "block" : "hidden"
@@ -142,10 +155,10 @@ const Header = ({ openSidebar }: HeaderPropsType) => {
                   {options.map((option) => (
                     <li
                       key={option.id}
-                      className="mx-5 my-5 cursor-pointer flex items-center justify-between text-[14px] font-normal"
+                      className="px-5 py-3 cursor-pointer flex items-center justify-between text-[14px] font-normal hover:bg-[#dfdfdf]"
                       id={option.id.toString()}
                       value={option.label}
-                      onClick={handleSubmit}
+                      onClick={() => handleSubmit(option.id)}
                     >
                       <span className="flex items-center gap-[10px]">
                         <span>{option.icon}</span>
