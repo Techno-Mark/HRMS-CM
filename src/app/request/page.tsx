@@ -453,10 +453,14 @@ export default function Home() {
 
       {loaded ? (
         <>
+          <span className="mx-auto text-sm flex">
+            <b>Note:&nbsp;</b>Please be rest assured that your documents will be
+            used for official purposes and we will keep them in safe custody.
+          </span>
           <div className={`mx-auto my-4 flex flex-col px-4 w-full mb-4`}>
             <div
               style={{
-                height: `calc(100vh - 127px - 90px)`,
+                height: `calc(100vh - 127px - 100px)`,
               }}
             >
               <DataGrid
